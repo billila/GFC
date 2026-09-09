@@ -1,0 +1,39 @@
+---
+toc: false
+---
+
+# Genomica Funzionale e Computazionale {.unnumbered}
+
+**A.A. 2026-2027**
+
+Corso di Laurea Magistrale, Dipartimento di Biologia, Università degli Studi di Padova
+
+Questo sito raccoglie i materiali della parte di **Computational Genomics** del corso: le lezioni e le esercitazioni pratiche.
+
+## Docenti
+
+- **Ilaria Billato** - lezioni di Computational Genomics
+- **Elena Zuin** - esercitazioni pratiche
+
+## Obiettivi del modulo
+
+Il modulo introduce i concetti e gli strumenti fondamentali della genomica computazionale, dalle basi di dati biologiche fino all'interpretazione funzionale dei risultati:
+
+1. reperire e interrogare le principali banche dati genomiche;
+2. comprendere gli algoritmi di allineamento e mappatura delle sequenze;
+3. affrontare l'assemblaggio e l'annotazione dei genomi;
+4. elaborare dati di RNA-Seq, dal processing all'espressione differenziale;
+5. interpretare i risultati nel contesto di pathway e network biologici.
+
+## Struttura del sito
+
+- **Lezioni Genomica Computazionale** — le slide/note di ciascuna lezione, in ordine.
+- **Esercitazioni Genomica Computazionale** — gli hands-on pratici, con codice ed esempi riproducibili.
+
+## Materiale e software
+
+Per le esercitazioni verrà usato *(da definire: R/Bioconductor, Python, ...)* — le istruzioni di installazione saranno indicate nella prima esercitazione.
+
+## Contatti
+
+Per domande sul modulo di Computational Genomics: **ilaria.billato@unipd.it**

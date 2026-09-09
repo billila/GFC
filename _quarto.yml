@@ -1,0 +1,38 @@
+project:
+  type: book
+
+book:
+  title: "Genomica Funzionale e Computazionale"
+  subtitle: "A.A. 2026-2027"
+  author:
+    - name: "Ilaria Billato"
+      affiliation: "Dipartimento di Biologia, Università degli Studi di Padova"
+    - name: "Elena Zuin"
+      affiliation: "Dipartimento di Biologia, Università degli Studi di Padova"
+  date: last-modified
+  chapters:
+    - index.qmd
+    # - part: "Lezioni Genomica Computazionale"
+    #   chapters:
+    #     - lezioni/computational-genomics/01-intro.qmd
+    #     - lezioni/computational-genomics/02-database-retrieval.qmd
+    #     - lezioni/computational-genomics/03-sequence-alignment.qmd
+    #     - lezioni/computational-genomics/04-sequence-mapping.qmd
+    #     - lezioni/computational-genomics/05-genome-assembly.qmd
+    #     - lezioni/computational-genomics/06-genes-annotation.qmd
+    #     - lezioni/computational-genomics/07-rnaseq-processing.qmd
+    #     - lezioni/computational-genomics/08-differential-expression.qmd
+    #     - lezioni/computational-genomics/09-pathways-networks.qmd
+    # - part: "Esercitazioni Genomica Computazionale"
+    #   chapters:
+    #     - esercitazioni/hands-on-1.qmd
+    #     - esercitazioni/hands-on-2.qmd
+    #     - esercitazioni/hands-on-3.qmd
+    #     - esercitazioni/hands-on-4-deg.qmd
+
+# bibliography: references.bib
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
