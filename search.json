@@ -1,0 +1,62 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Genomica Funzionale e Computazionale",
+    "section": "",
+    "text": "Genomica Funzionale e Computazionale\nA.A. 2026-2027\nCorso di Laurea Magistrale, Dipartimento di Biologia, Università degli Studi di Padova\nQuesto sito raccoglie i materiali della parte di Computational Genomics del corso: le lezioni e le esercitazioni pratiche.",
+    "crumbs": [
+      "Genomica Funzionale e Computazionale"
+    ]
+  },
+  {
+    "objectID": "index.html#docenti",
+    "href": "index.html#docenti",
+    "title": "Genomica Funzionale e Computazionale",
+    "section": "Docenti",
+    "text": "Docenti\n\nIlaria Billato - lezioni di Computational Genomics\nElena Zuin - esercitazioni pratiche",
+    "crumbs": [
+      "Genomica Funzionale e Computazionale"
+    ]
+  },
+  {
+    "objectID": "index.html#obiettivi-del-modulo",
+    "href": "index.html#obiettivi-del-modulo",
+    "title": "Genomica Funzionale e Computazionale",
+    "section": "Obiettivi del modulo",
+    "text": "Obiettivi del modulo\nIl modulo introduce i concetti e gli strumenti fondamentali della genomica computazionale, dalle basi di dati biologiche fino all’interpretazione funzionale dei risultati:\n\nreperire e interrogare le principali banche dati genomiche;\ncomprendere gli algoritmi di allineamento e mappatura delle sequenze;\naffrontare l’assemblaggio e l’annotazione dei genomi;\nelaborare dati di RNA-Seq, dal processing all’espressione differenziale;\ninterpretare i risultati nel contesto di pathway e network biologici.",
+    "crumbs": [
+      "Genomica Funzionale e Computazionale"
+    ]
+  },
+  {
+    "objectID": "index.html#struttura-del-sito",
+    "href": "index.html#struttura-del-sito",
+    "title": "Genomica Funzionale e Computazionale",
+    "section": "Struttura del sito",
+    "text": "Struttura del sito\n\nLezioni Genomica Computazionale — le slide/note di ciascuna lezione, in ordine.\nEsercitazioni Genomica Computazionale — gli hands-on pratici, con codice ed esempi riproducibili.",
+    "crumbs": [
+      "Genomica Funzionale e Computazionale"
+    ]
+  },
+  {
+    "objectID": "index.html#materiale-e-software",
+    "href": "index.html#materiale-e-software",
+    "title": "Genomica Funzionale e Computazionale",
+    "section": "Materiale e software",
+    "text": "Materiale e software\nPer le esercitazioni verrà usato (da definire: R/Bioconductor, Python, …) — le istruzioni di installazione saranno indicate nella prima esercitazione.",
+    "crumbs": [
+      "Genomica Funzionale e Computazionale"
+    ]
+  },
+  {
+    "objectID": "index.html#contatti",
+    "href": "index.html#contatti",
+    "title": "Genomica Funzionale e Computazionale",
+    "section": "Contatti",
+    "text": "Contatti\nPer domande sul modulo di Computational Genomics: ilaria.billato@unipd.it",
+    "crumbs": [
+      "Genomica Funzionale e Computazionale"
+    ]
+  }
+]
