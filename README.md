@@ -1,14 +1,14 @@
-# Genomica Funzionale e Computazionale — Materiali del corso
+# Genomica Funzionale e Computazionale
 
-Sito del corso **Genomica Funzionale e Computazionale** per condividere:
+## Materiali del corso
 
-- i **PDF delle lezioni**;
-- i **esercitazioni** pratiche.
+In questa pagina sono disponibili i materiali del corso **Genomica Funzionale e Computazionale**:
 
+- 📚 **Slide delle lezioni** in formato PDF
+- 💻 **Esercitazioni pratiche** e relativo materiale
 
-To correctly compile the book, including embedded slides:
+## Moodle
 
-1. Render the book
-2. Render each set of slides in the `slides` folder
-3. Run `cp -r slides _book`
-4. Run `quarto publish gh-pages`
+Tutte le informazioni ufficiali sul corso sono disponibili sulla piattaforma Moodle dell'Università di Padova:
+
+👉 [**Genomica Funzionale e Computazionale — Moodle UniPD**](https://stem.elearning.unipd.it/course/view.php?id=17645)

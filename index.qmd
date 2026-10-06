@@ -21,9 +21,8 @@ Il modulo introduce i concetti e gli strumenti fondamentali della genomica compu
 
 1. reperire e interrogare le principali banche dati genomiche;
 2. comprendere gli algoritmi di allineamento e mappatura delle sequenze;
-3. affrontare l'assemblaggio e l'annotazione dei genomi;
-4. elaborare dati di RNA-Seq, dal processing all'espressione differenziale;
-5. interpretare i risultati nel contesto di pathway e network biologici.
+3. elaborare dati di RNA-Seq, dal processing all'espressione differenziale;
+4. interpretare i risultati nel contesto di pathway e network biologici.
 
 ## Struttura del sito
 
@@ -32,7 +31,7 @@ Il modulo introduce i concetti e gli strumenti fondamentali della genomica compu
 
 ## Materiale e software
 
-Per le esercitazioni verrà usato *(da definire: R/Bioconductor, Python, ...)* — le istruzioni di installazione saranno indicate nella prima esercitazione.
+Per le esercitazioni verrà usato R/Bioconductor — le istruzioni di installazione saranno indicate nella prima esercitazione.
 
 ## Contatti
 
