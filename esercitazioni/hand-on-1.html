@@ -1,0 +1,2020 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>1&nbsp; Lab 1: Introduction to R and Bioconductor – Genomica Funzionale e Computazionale</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../index.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-2698fb289d119bff91fb56cd97f48cf3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-1.html">Esercitazioni Genomica Computazionale</a></li><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-1.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Lab 1: Introduction to R and Bioconductor</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header sidebar-header-stacked">
+      <a href="../index.html" class="sidebar-logo-link">
+      </a>
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Genomica Funzionale e Computazionale</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Genomica Funzionale e Computazionale</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Esercitazioni Genomica Computazionale</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../esercitazioni/hand-on-1.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Lab 1: Introduction to R and Bioconductor</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview"><span class="header-section-number">1.1</span> Overview</a></li>
+  <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started"><span class="header-section-number">1.2</span> Getting started</a>
+  <ul class="collapse">
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup"><span class="header-section-number">1.2.1</span> Setup</a></li>
+  <li><a href="#rstudio" id="toc-rstudio" class="nav-link" data-scroll-target="#rstudio"><span class="header-section-number">1.2.2</span> RStudio</a></li>
+  </ul></li>
+  <li><a href="#r-basics" id="toc-r-basics" class="nav-link" data-scroll-target="#r-basics"><span class="header-section-number">1.3</span> R basics</a>
+  <ul class="collapse">
+  <li><a href="#r-as-a-calculator" id="toc-r-as-a-calculator" class="nav-link" data-scroll-target="#r-as-a-calculator"><span class="header-section-number">1.3.1</span> R as a calculator</a></li>
+  <li><a href="#objects-and-assignment" id="toc-objects-and-assignment" class="nav-link" data-scroll-target="#objects-and-assignment"><span class="header-section-number">1.3.2</span> Objects and assignment</a></li>
+  <li><a href="#functions-and-help" id="toc-functions-and-help" class="nav-link" data-scroll-target="#functions-and-help"><span class="header-section-number">1.3.3</span> Functions and help</a></li>
+  <li><a href="#vectors" id="toc-vectors" class="nav-link" data-scroll-target="#vectors"><span class="header-section-number">1.3.4</span> Vectors</a></li>
+  <li><a href="#types-of-data" id="toc-types-of-data" class="nav-link" data-scroll-target="#types-of-data"><span class="header-section-number">1.3.5</span> Types of data</a></li>
+  <li><a href="#comparisons-and-logical-vectors" id="toc-comparisons-and-logical-vectors" class="nav-link" data-scroll-target="#comparisons-and-logical-vectors"><span class="header-section-number">1.3.6</span> Comparisons and logical vectors</a></li>
+  <li><a href="#missing-values" id="toc-missing-values" class="nav-link" data-scroll-target="#missing-values"><span class="header-section-number">1.3.7</span> Missing values</a></li>
+  <li><a href="#data-frames" id="toc-data-frames" class="nav-link" data-scroll-target="#data-frames"><span class="header-section-number">1.3.8</span> Data frames</a></li>
+  <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages"><span class="header-section-number">1.3.9</span> Packages</a></li>
+  </ul></li>
+  <li><a href="#descriptive-statistics" id="toc-descriptive-statistics" class="nav-link" data-scroll-target="#descriptive-statistics"><span class="header-section-number">1.4</span> Descriptive statistics</a>
+  <ul class="collapse">
+  <li><a href="#measures-of-location-mean-and-median" id="toc-measures-of-location-mean-and-median" class="nav-link" data-scroll-target="#measures-of-location-mean-and-median"><span class="header-section-number">1.4.1</span> Measures of location: mean and median</a></li>
+  <li><a href="#measures-of-spread-variance-and-standard-deviation" id="toc-measures-of-spread-variance-and-standard-deviation" class="nav-link" data-scroll-target="#measures-of-spread-variance-and-standard-deviation"><span class="header-section-number">1.4.2</span> Measures of spread: variance and standard deviation</a></li>
+  <li><a href="#summaries-by-group" id="toc-summaries-by-group" class="nav-link" data-scroll-target="#summaries-by-group"><span class="header-section-number">1.4.3</span> Summaries by group</a></li>
+  </ul></li>
+  <li><a href="#case-study-all-phenotypic-data" id="toc-case-study-all-phenotypic-data" class="nav-link" data-scroll-target="#case-study-all-phenotypic-data"><span class="header-section-number">1.5</span> Case study: ALL phenotypic data</a>
+  <ul class="collapse">
+  <li><a href="#data-input" id="toc-data-input" class="nav-link" data-scroll-target="#data-input"><span class="header-section-number">1.5.1</span> Data input</a></li>
+  <li><a href="#subsetting" id="toc-subsetting" class="nav-link" data-scroll-target="#subsetting"><span class="header-section-number">1.5.2</span> Subsetting</a></li>
+  <li><a href="#factors" id="toc-factors" class="nav-link" data-scroll-target="#factors"><span class="header-section-number">1.5.3</span> Factors</a></li>
+  <li><a href="#summaries-and-a-first-test" id="toc-summaries-and-a-first-test" class="nav-link" data-scroll-target="#summaries-and-a-first-test"><span class="header-section-number">1.5.4</span> Summaries and a first test</a></li>
+  </ul></li>
+  <li><a href="#case-study-weighty-matters" id="toc-case-study-weighty-matters" class="nav-link" data-scroll-target="#case-study-weighty-matters"><span class="header-section-number">1.6</span> Case study: weighty matters</a>
+  <ul class="collapse">
+  <li><a href="#data-input-and-base-plots" id="toc-data-input-and-base-plots" class="nav-link" data-scroll-target="#data-input-and-base-plots"><span class="header-section-number">1.6.1</span> Data input and base plots</a></li>
+  <li><a href="#missing-values-1" id="toc-missing-values-1" class="nav-link" data-scroll-target="#missing-values-1"><span class="header-section-number">1.6.2</span> Missing values</a></li>
+  <li><a href="#ggplot2-graphics" id="toc-ggplot2-graphics" class="nav-link" data-scroll-target="#ggplot2-graphics"><span class="header-section-number">1.6.3</span> ggplot2 graphics</a></li>
+  <li><a href="#group-summaries-with-dplyr" id="toc-group-summaries-with-dplyr" class="nav-link" data-scroll-target="#group-summaries-with-dplyr"><span class="header-section-number">1.6.4</span> Group summaries with dplyr</a></li>
+  </ul></li>
+  <li><a href="#genomic-data-the-summarizedexperiment" id="toc-genomic-data-the-summarizedexperiment" class="nav-link" data-scroll-target="#genomic-data-the-summarizedexperiment"><span class="header-section-number">1.7</span> Genomic data: the SummarizedExperiment</a>
+  <ul class="collapse">
+  <li><a href="#why-a-dedicated-data-structure" id="toc-why-a-dedicated-data-structure" class="nav-link" data-scroll-target="#why-a-dedicated-data-structure"><span class="header-section-number">1.7.1</span> Why a dedicated data structure?</a></li>
+  <li><a href="#the-airway-experiment" id="toc-the-airway-experiment" class="nav-link" data-scroll-target="#the-airway-experiment"><span class="header-section-number">1.7.2</span> The airway experiment</a></li>
+  <li><a href="#exploring-the-object" id="toc-exploring-the-object" class="nav-link" data-scroll-target="#exploring-the-object"><span class="header-section-number">1.7.3</span> Exploring the object</a></li>
+  <li><a href="#descriptive-statistics-on-counts" id="toc-descriptive-statistics-on-counts" class="nav-link" data-scroll-target="#descriptive-statistics-on-counts"><span class="header-section-number">1.7.4</span> Descriptive statistics on counts</a></li>
+  </ul></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading"><span class="header-section-number">1.8</span> Further reading</a></li>
+  <li><a href="#acknowledgements" id="toc-acknowledgements" class="nav-link" data-scroll-target="#acknowledgements"><span class="header-section-number">1.9</span> Acknowledgements</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-1.html">Esercitazioni Genomica Computazionale</a></li><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-1.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Lab 1: Introduction to R and Bioconductor</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Lab 1: Introduction to R and Bioconductor</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="overview" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="overview"><span class="header-section-number">1.1</span> Overview</h2>
+<p><strong>Objective:</strong> get comfortable with R starting from zero, compute and interpret simple descriptive statistics, and meet the <code>SummarizedExperiment</code>, the central data structure for genomic experiments in Bioconductor.</p>
+<p><strong>What you will learn:</strong></p>
+<ul>
+<li>how to use RStudio and write R scripts</li>
+<li>the basic building blocks of R: objects, functions, vectors, data frames</li>
+<li>how to compute mean, median, variance, and standard deviation, and when to prefer one over another</li>
+<li>how to import, explore, subset, and summarize a real dataset</li>
+<li>how to make simple plots with base R and <code>ggplot2</code></li>
+<li>how an RNA-seq experiment is stored in a <code>SummarizedExperiment</code></li>
+</ul>
+</section>
+<section id="getting-started" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="getting-started"><span class="header-section-number">1.2</span> Getting started</h2>
+<section id="setup" class="level3" data-number="1.2.1">
+<h3 data-number="1.2.1" class="anchored" data-anchor-id="setup"><span class="header-section-number">1.2.1</span> Setup</h3>
+<p>Download the data files for this lab and save them in a folder called <code>data</code> inside your working folder:</p>
+<ul>
+<li><a href="data/ALLphenoData.tsv">ALLphenoData.tsv</a></li>
+<li><a href="data/BRFSS-subset.csv">BRFSS-subset.csv</a></li>
+<li><a href="data/airway-read-counts.csv">airway-read-counts.csv</a></li>
+<li><a href="data/airway-sample-sheet.csv">airway-sample-sheet.csv</a></li>
+</ul>
+<p><em>check airway</em></p>
+</section>
+<section id="rstudio" class="level3" data-number="1.2.2">
+<h3 data-number="1.2.2" class="anchored" data-anchor-id="rstudio"><span class="header-section-number">1.2.2</span> RStudio</h3>
+<p>When you open RStudio you see four panels:</p>
+<ul>
+<li>the <strong>console</strong> (bottom left), where R executes commands;</li>
+<li>the <strong>script editor</strong> (top left), where you write code that you want to keep;</li>
+<li>the <strong>environment</strong> (top right), which lists the objects you have created;</li>
+<li>the <strong>files / plots / help</strong> panel (bottom right).</li>
+</ul>
+<p>A few habits that will save you time:</p>
+<ul>
+<li>Always write your code in a <strong>script</strong> (<em>File → New File → R Script</em>) and save it. Run the current line, or the selected lines, with <code>Ctrl + Enter</code> (<code>Cmd + Enter</code> on a Mac).</li>
+<li>Everything after a <code>#</code> is a <strong>comment</strong> and is ignored by R. Use comments to explain to your future self what the code does.</li>
+</ul>
+</section>
+</section>
+<section id="r-basics" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="r-basics"><span class="header-section-number">1.3</span> R basics</h2>
+<section id="r-as-a-calculator" class="level3" data-number="1.3.1">
+<h3 data-number="1.3.1" class="anchored" data-anchor-id="r-as-a-calculator"><span class="header-section-number">1.3.1</span> R as a calculator</h3>
+<p>The simplest thing you can do with R is arithmetic.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span> <span class="sc">+</span> <span class="dv">3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dv">10</span> <span class="sc">/</span> <span class="dv">4</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2.5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span><span class="sc">^</span><span class="dv">10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1024</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="sc">+</span> <span class="dv">2</span>) <span class="sc">*</span> <span class="dv">3</span>   <span class="co"># parentheses work as usual</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(<span class="dv">16</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">log</span>(<span class="dv">100</span>)      <span class="co"># natural logarithm</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4.60517</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">log10</span>(<span class="dv">100</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2.718282</code></pre>
+</div>
+</div>
+</section>
+<section id="objects-and-assignment" class="level3" data-number="1.3.2">
+<h3 data-number="1.3.2" class="anchored" data-anchor-id="objects-and-assignment"><span class="header-section-number">1.3.2</span> Objects and assignment</h3>
+<p>Results can be stored in <strong>objects</strong> using the assignment operator <code>&lt;-</code> (read it as “gets”).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>weight_kg <span class="ot">&lt;-</span> <span class="dv">70</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>height_m <span class="ot">&lt;-</span> <span class="fl">1.75</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>bmi <span class="ot">&lt;-</span> weight_kg <span class="sc">/</span> height_m<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>bmi</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 22.85714</code></pre>
+</div>
+</div>
+<p>Some rules about object names:</p>
+<ul>
+<li>they can contain letters, numbers, <code>.</code> and <code>_</code>, but cannot start with a number;</li>
+<li>R is <strong>case-sensitive</strong>: <code>bmi</code> and <code>BMI</code> are two different objects;</li>
+<li>choose names that describe the content (<code>height_m</code> is better than <code>x</code>).</li>
+</ul>
+<p><code>ls()</code> lists the objects in your environment, <code>rm()</code> removes one.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "bmi"       "height_m"  "weight_kg"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(bmi)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "height_m"  "weight_kg"</code></pre>
+</div>
+</div>
+</section>
+<section id="functions-and-help" class="level3" data-number="1.3.3">
+<h3 data-number="1.3.3" class="anchored" data-anchor-id="functions-and-help"><span class="header-section-number">1.3.3</span> Functions and help</h3>
+<p>A <strong>function</strong> takes some inputs (<em>arguments</em>), does something, and returns an output. We have already used <code>sqrt()</code> and <code>log()</code>. Arguments can be given by position or by name; many arguments have default values.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fl">3.14159</span>)              <span class="co"># default: digits = 0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fl">3.14159</span>, <span class="at">digits =</span> <span class="dv">2</span>)  <span class="co"># named argument</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3.14</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">log</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>)                    <span class="co"># default base = exp(1)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.0000000 0.6931472 1.0986123 1.3862944 1.6094379</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">log</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="at">base =</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.0000000 0.3010300 0.4771213 0.6020600 0.6989700</code></pre>
+</div>
+</div>
+<p>To read the documentation of a function, use <code>?</code>. The <strong>Usage</strong> section shows the arguments and their defaults, and the <strong>Examples</strong> at the bottom of the page can be copied and run.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>?round</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>?mean</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="vectors" class="level3" data-number="1.3.4">
+<h3 data-number="1.3.4" class="anchored" data-anchor-id="vectors"><span class="header-section-number">1.3.4</span> Vectors</h3>
+<p>The basic data structure in R is the <strong>vector</strong>, an ordered collection of values of the same type. Vectors are created with <code>c()</code> (“combine”).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>expr <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">5.2</span>, <span class="fl">6.1</span>, <span class="fl">4.8</span>, <span class="fl">7.3</span>, <span class="fl">5.9</span>)   <span class="co"># expression of a gene in 5 samples</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>expr</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.2 6.1 4.8 7.3 5.9</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(expr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1]  1  2  3  4  5  6  7  8  9 10</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.25</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.00 0.25 0.50 0.75 1.00</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rep</span>(<span class="st">"ctrl"</span>, <span class="at">times =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "ctrl" "ctrl" "ctrl"</code></pre>
+</div>
+</div>
+<p>Most operations in R are <strong>vectorized</strong>: they are applied to each element.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>expr <span class="sc">*</span> <span class="dv">2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 10.4 12.2  9.6 14.6 11.8</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>expr <span class="sc">-</span> <span class="fu">mean</span>(expr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -0.66  0.24 -1.06  1.44  0.04</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">log2</span>(expr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2.378512 2.608809 2.263034 2.867896 2.560715</code></pre>
+</div>
+</div>
+<p>You extract elements with square brackets <code>[ ]</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>expr[<span class="dv">1</span>]          <span class="co"># first element</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>expr[<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>)]    <span class="co"># first and third</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.2 4.8</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>expr[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>]        <span class="co"># from second to fourth</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 6.1 4.8 7.3</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>expr[<span class="sc">-</span><span class="dv">1</span>]         <span class="co"># all but the first</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 6.1 4.8 7.3 5.9</code></pre>
+</div>
+</div>
+</section>
+<section id="types-of-data" class="level3" data-number="1.3.5">
+<h3 data-number="1.3.5" class="anchored" data-anchor-id="types-of-data"><span class="header-section-number">1.3.5</span> Types of data</h3>
+<p>Every vector has a type. The most common ones are numeric, character, and logical. <code>class()</code> tells you the type of an object.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(expr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "numeric"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>genes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"TP53"</span>, <span class="st">"BRCA1"</span>, <span class="st">"MYC"</span>)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(genes)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "character"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>is_up <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="cn">TRUE</span>, <span class="cn">FALSE</span>, <span class="cn">TRUE</span>)</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(is_up)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "logical"</code></pre>
+</div>
+</div>
+<p>A vector can contain only one type: if you mix them, R converts everything to the most general type.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="dv">1</span>, <span class="st">"a"</span>, <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "1"    "a"    "TRUE"</code></pre>
+</div>
+</div>
+<p>Categorical variables are stored as <strong>factors</strong>, which know the set of possible values (the <em>levels</em>).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>group <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">c</span>(<span class="st">"ctrl"</span>, <span class="st">"trt"</span>, <span class="st">"trt"</span>, <span class="st">"ctrl"</span>, <span class="st">"trt"</span>))</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>group</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] ctrl trt  trt  ctrl trt 
+Levels: ctrl trt</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(group)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "ctrl" "trt" </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(group)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>group
+ctrl  trt 
+   2    3 </code></pre>
+</div>
+</div>
+</section>
+<section id="comparisons-and-logical-vectors" class="level3" data-number="1.3.6">
+<h3 data-number="1.3.6" class="anchored" data-anchor-id="comparisons-and-logical-vectors"><span class="header-section-number">1.3.6</span> Comparisons and logical vectors</h3>
+<p>Comparisons return logical vectors, which are very useful for selecting data.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>expr <span class="sc">&gt;</span> <span class="fl">5.5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE  TRUE FALSE  TRUE  TRUE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>expr[expr <span class="sc">&gt;</span> <span class="fl">5.5</span>]            <span class="co"># keep only the values above 5.5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 6.1 7.3 5.9</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(expr <span class="sc">&gt;</span> <span class="fl">5.5</span>)             <span class="co"># TRUE counts as 1: how many values are above 5.5?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span>(expr <span class="sc">&gt;</span> <span class="fl">5.5</span>)           <span class="co"># positions of those values</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2 4 5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>expr <span class="sc">&gt;</span> <span class="dv">5</span> <span class="sc">&amp;</span> expr <span class="sc">&lt;</span> <span class="dv">6</span>         <span class="co"># AND</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]  TRUE FALSE FALSE FALSE  TRUE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>expr <span class="sc">&lt;</span> <span class="dv">5</span> <span class="sc">|</span> expr <span class="sc">&gt;</span> <span class="dv">7</span>         <span class="co"># OR</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE FALSE  TRUE  TRUE FALSE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>genes <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"MYC"</span>, <span class="st">"KRAS"</span>) <span class="co"># is each element in a set?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE FALSE  TRUE</code></pre>
+</div>
+</div>
+</section>
+<section id="missing-values" class="level3" data-number="1.3.7">
+<h3 data-number="1.3.7" class="anchored" data-anchor-id="missing-values"><span class="header-section-number">1.3.7</span> Missing values</h3>
+<p>Missing data are represented by <code>NA</code> (“not available”). Any calculation involving an <code>NA</code> gives <code>NA</code>, unless you tell the function to remove them.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>expr_na <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">5.2</span>, <span class="cn">NA</span>, <span class="fl">4.8</span>, <span class="fl">7.3</span>, <span class="fl">5.9</span>)</span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(expr_na)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] NA</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(expr_na, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.8</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">is.na</span>(expr_na)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE  TRUE FALSE FALSE FALSE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">is.na</span>(expr_na))         <span class="co"># how many missing values?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1</code></pre>
+</div>
+</div>
+</section>
+<section id="data-frames" class="level3" data-number="1.3.8">
+<h3 data-number="1.3.8" class="anchored" data-anchor-id="data-frames"><span class="header-section-number">1.3.8</span> Data frames</h3>
+<p>A <strong>data frame</strong> is a table: each column is a vector (a variable), and all columns have the same length (one row per observation). R comes with some example datasets. <code>PlantGrowth</code> contains the dry weight of plants grown in a control condition and under two treatments.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>PlantGrowth</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   weight group
+1    4.17  ctrl
+2    5.58  ctrl
+3    5.18  ctrl
+4    6.11  ctrl
+5    4.50  ctrl
+6    4.61  ctrl
+7    5.17  ctrl
+8    4.53  ctrl
+9    5.33  ctrl
+10   5.14  ctrl
+11   4.81  trt1
+12   4.17  trt1
+13   4.41  trt1
+14   3.59  trt1
+15   5.87  trt1
+16   3.83  trt1
+17   6.03  trt1
+18   4.89  trt1
+19   4.32  trt1
+20   4.69  trt1
+21   6.31  trt2
+22   5.12  trt2
+23   5.54  trt2
+24   5.50  trt2
+25   5.37  trt2
+26   5.29  trt2
+27   4.92  trt2
+28   6.15  trt2
+29   5.80  trt2
+30   5.26  trt2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(PlantGrowth)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  weight group
+1   4.17  ctrl
+2   5.58  ctrl
+3   5.18  ctrl
+4   6.11  ctrl
+5   4.50  ctrl
+6   4.61  ctrl</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(PlantGrowth)      <span class="co"># number of rows and columns</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 30  2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(PlantGrowth)      <span class="co"># structure: type of each column</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   30 obs. of  2 variables:
+ $ weight: num  4.17 5.58 5.18 6.11 4.5 4.61 5.17 4.53 5.33 5.14 ...
+ $ group : Factor w/ 3 levels "ctrl","trt1",..: 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(PlantGrowth)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     weight       group   
+ Min.   :3.590   ctrl:10  
+ 1st Qu.:4.550   trt1:10  
+ Median :5.155   trt2:10  
+ Mean   :5.073            
+ 3rd Qu.:5.530            
+ Max.   :6.310            </code></pre>
+</div>
+</div>
+<p>Columns are extracted with <code>$</code>; rows and columns with <code>[row, column]</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>PlantGrowth<span class="sc">$</span>weight</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 4.17 5.58 5.18 6.11 4.50 4.61 5.17 4.53 5.33 5.14 4.81 4.17 4.41 3.59 5.87
+[16] 3.83 6.03 4.89 4.32 4.69 6.31 5.12 5.54 5.50 5.37 5.29 4.92 6.15 5.80 5.26</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a>PlantGrowth[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, ]                            <span class="co"># first three rows, all columns</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  weight group
+1   4.17  ctrl
+2   5.58  ctrl
+3   5.18  ctrl</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>PlantGrowth[, <span class="st">"group"</span>]                        <span class="co"># one column</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] ctrl ctrl ctrl ctrl ctrl ctrl ctrl ctrl ctrl ctrl trt1 trt1 trt1 trt1 trt1
+[16] trt1 trt1 trt1 trt1 trt1 trt2 trt2 trt2 trt2 trt2 trt2 trt2 trt2 trt2 trt2
+Levels: ctrl trt1 trt2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb108"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a>PlantGrowth[PlantGrowth<span class="sc">$</span>group <span class="sc">==</span> <span class="st">"ctrl"</span>, ]    <span class="co"># rows of the control group</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   weight group
+1    4.17  ctrl
+2    5.58  ctrl
+3    5.18  ctrl
+4    6.11  ctrl
+5    4.50  ctrl
+6    4.61  ctrl
+7    5.17  ctrl
+8    4.53  ctrl
+9    5.33  ctrl
+10   5.14  ctrl</code></pre>
+</div>
+</div>
+<p>You can also build a data frame yourself.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb110"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">sample =</span> <span class="fu">c</span>(<span class="st">"S1"</span>, <span class="st">"S2"</span>, <span class="st">"S3"</span>, <span class="st">"S4"</span>, <span class="st">"S5"</span>),</span>
+<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">group =</span> group,</span>
+<span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">expr =</span> expr</span>
+<span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a>samples</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  sample group expr
+1     S1  ctrl  5.2
+2     S2   trt  6.1
+3     S3   trt  4.8
+4     S4  ctrl  7.3
+5     S5   trt  5.9</code></pre>
+</div>
+</div>
+</section>
+<section id="packages" class="level3" data-number="1.3.9">
+<h3 data-number="1.3.9" class="anchored" data-anchor-id="packages"><span class="header-section-number">1.3.9</span> Packages</h3>
+<p>Packages extend R with new functions and data. They are <strong>installed</strong> once with <code>install.packages()</code> (or <code>BiocManager::install()</code> for Bioconductor packages), and <strong>loaded</strong> in every new session with <code>library()</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="descriptive-statistics" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="descriptive-statistics"><span class="header-section-number">1.4</span> Descriptive statistics</h2>
+<p>Before any statistical test, we describe the data: where is the “center” of the distribution, and how much do the values vary around it?</p>
+<p>We use the plant weights of the control group.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a>ctrl <span class="ot">&lt;-</span> PlantGrowth<span class="sc">$</span>weight[PlantGrowth<span class="sc">$</span>group <span class="sc">==</span> <span class="st">"ctrl"</span>]</span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a>ctrl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 4.17 5.58 5.18 6.11 4.50 4.61 5.17 4.53 5.33 5.14</code></pre>
+</div>
+</div>
+<section id="measures-of-location-mean-and-median" class="level3" data-number="1.4.1">
+<h3 data-number="1.4.1" class="anchored" data-anchor-id="measures-of-location-mean-and-median"><span class="header-section-number">1.4.1</span> Measures of location: mean and median</h3>
+<p>The <strong>mean</strong> is the sum of the values divided by their number, <span class="math inline">\(\bar{x} = \frac{1}{n}\sum_{i=1}^n x_i\)</span>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(ctrl) <span class="sc">/</span> <span class="fu">length</span>(ctrl)   <span class="co"># by hand</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.032</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(ctrl)                 <span class="co"># built-in function</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.032</code></pre>
+</div>
+</div>
+<p>The <strong>median</strong> is the value in the middle once the data are sorted: half of the observations are below it and half above. With an even number of observations it is the average of the two central values.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sort</span>(ctrl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 4.17 4.50 4.53 4.61 5.14 5.17 5.18 5.33 5.58 6.11</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(ctrl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.155</code></pre>
+</div>
+</div>
+<p>The two measures behave very differently when the data contain extreme values. Suppose that a weight was mistyped as 51.7 instead of 5.17.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb123"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a>ctrl_typo <span class="ot">&lt;-</span> ctrl</span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>ctrl_typo[<span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="fl">51.7</span></span>
+<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(ctrl);   <span class="fu">mean</span>(ctrl_typo)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.032</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9.644</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb126"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(ctrl); <span class="fu">median</span>(ctrl_typo)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.155</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.155</code></pre>
+</div>
+</div>
+<p>The mean is pulled towards the outlier, while the median barely changes: the median is <strong>robust</strong> to outliers. This matters a lot with genomic data, which are often very skewed (we will see an example with RNA-seq counts at the end of this lab).</p>
+</section>
+<section id="measures-of-spread-variance-and-standard-deviation" class="level3" data-number="1.4.2">
+<h3 data-number="1.4.2" class="anchored" data-anchor-id="measures-of-spread-variance-and-standard-deviation"><span class="header-section-number">1.4.2</span> Measures of spread: variance and standard deviation</h3>
+<p>The <strong>variance</strong> measures how far the values are, on average, from the mean. The sample variance is</p>
+<p><span class="math display">\[
+s^2 = \frac{1}{n-1}\sum_{i=1}^n (x_i - \bar{x})^2.
+\]</span></p>
+<p>We divide by <span class="math inline">\(n-1\)</span> rather than <span class="math inline">\(n\)</span> because we estimate the mean from the same data; with this correction, <span class="math inline">\(s^2\)</span> is an unbiased estimate of the population variance. Let’s compute it step by step.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb129"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a>deviations <span class="ot">&lt;-</span> ctrl <span class="sc">-</span> <span class="fu">mean</span>(ctrl)    <span class="co"># distance of each value from the mean</span></span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a>deviations</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] -0.862  0.548  0.148  1.078 -0.532 -0.422  0.138 -0.502  0.298  0.108</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(deviations)                    <span class="co"># always 0 (up to rounding)! that's why we square them</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(deviations<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> (<span class="fu">length</span>(ctrl) <span class="sc">-</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.3399956</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb135"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(ctrl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.3399956</code></pre>
+</div>
+</div>
+<p>The variance is expressed in squared units (here, squared grams). The <strong>standard deviation</strong> is its square root, and has the same unit as the data.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb137"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(<span class="fu">var</span>(ctrl))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.5830914</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb139"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(ctrl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.5830914</code></pre>
+</div>
+</div>
+</section>
+<section id="summaries-by-group" class="level3" data-number="1.4.3">
+<h3 data-number="1.4.3" class="anchored" data-anchor-id="summaries-by-group"><span class="header-section-number">1.4.3</span> Summaries by group</h3>
+<p>A boxplot shows median, quartiles, and potential outliers for each group in one picture. Note the <strong>formula</strong> notation <code>weight ~ group</code>, read as “weight as a function of group”.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb141"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb141-1"><a href="#cb141-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(weight <span class="sc">~</span> group, <span class="at">data =</span> PlantGrowth,</span>
+<span id="cb141-2"><a href="#cb141-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Dry weight"</span>, <span class="at">col =</span> <span class="st">"lightblue"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/boxplot-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="case-study-all-phenotypic-data" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="case-study-all-phenotypic-data"><span class="header-section-number">1.5</span> Case study: ALL phenotypic data</h2>
+<p>We now work with a real dataset: clinical information about patients with acute lymphoblastic leukemia (ALL).</p>
+<section id="data-input" class="level3" data-number="1.5.1">
+<h3 data-number="1.5.1" class="anchored" data-anchor-id="data-input"><span class="header-section-number">1.5.1</span> Data input</h3>
+<p>The file is tab-separated, so we use <code>read.delim()</code>. Check <code>?read.delim</code> for other options, and <code>read.csv()</code> for comma-separated files.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb142"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a>pdata <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">"data/ALLphenoData.tsv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Explore the basic properties of the object we just created.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb143"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(pdata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "data.frame"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb145"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb145-1"><a href="#cb145-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(pdata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 127  21</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb147"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb147-1"><a href="#cb147-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(pdata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "id"             "diagnosis"      "sex"            "age"           
+ [5] "BT"             "remission"      "CR"             "date.cr"       
+ [9] "t.4.11."        "t.9.22."        "cyto.normal"    "citog"         
+[13] "mol.biol"       "fusion.protein" "mdr"            "kinet"         
+[17] "ccr"            "relapse"        "transplant"     "f.u"           
+[21] "date.last.seen"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb149"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb149-1"><a href="#cb149-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pdata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    id diagnosis sex age BT remission CR   date.cr t.4.11. t.9.22. cyto.normal
+1 1005 5/21/1997   M  53 B2        CR CR  8/6/1997   FALSE    TRUE       FALSE
+2 1010 3/29/2000   M  19 B2        CR CR 6/27/2000   FALSE   FALSE       FALSE
+3 3002 6/24/1998   F  52 B4        CR CR 8/17/1998      NA      NA          NA
+4 4006 7/17/1997   M  38 B1        CR CR  9/8/1997    TRUE   FALSE       FALSE
+5 4007 7/22/1997   M  57 B2        CR CR 9/17/1997   FALSE   FALSE       FALSE
+6 4008 7/30/1997   M  17 B1        CR CR 9/27/1997   FALSE   FALSE       FALSE
+         citog mol.biol fusion.protein mdr   kinet   ccr relapse transplant
+1      t(9;22)  BCR/ABL           p210 NEG dyploid FALSE   FALSE       TRUE
+2  simple alt.      NEG           &lt;NA&gt; POS dyploid FALSE    TRUE      FALSE
+3         &lt;NA&gt;  BCR/ABL           p190 NEG dyploid FALSE    TRUE      FALSE
+4      t(4;11) ALL1/AF4           &lt;NA&gt; NEG dyploid FALSE    TRUE      FALSE
+5      del(6q)      NEG           &lt;NA&gt; NEG dyploid FALSE    TRUE      FALSE
+6 complex alt.      NEG           &lt;NA&gt; NEG hyperd. FALSE    TRUE      FALSE
+                f.u date.last.seen
+1 BMT / DEATH IN CR           &lt;NA&gt;
+2               REL      8/28/2000
+3               REL     10/15/1999
+4               REL      1/23/1998
+5               REL      11/4/1997
+6               REL     12/15/1997</code></pre>
+</div>
+</div>
+<p>Note that R modified some column names (e.g., <code>t(4;11)</code> became <code>t.4.11.</code>) to make them valid object names.</p>
+<p>Character variables such as <code>sex</code> are best summarized with <code>table()</code>; <code>useNA = "ifany"</code> also counts missing values.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb151"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb151-1"><a href="#cb151-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(pdata<span class="sc">$</span>sex, <span class="at">useNA =</span> <span class="st">"ifany"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+   F    M &lt;NA&gt; 
+  42   83    2 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb153"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb153-1"><a href="#cb153-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pdata<span class="sc">$</span>age)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.     NAs 
+   5.00   19.00   29.00   32.37   45.50   58.00       4 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb155"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb155-1"><a href="#cb155-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pdata<span class="sc">$</span>cyto.normal)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Mode   FALSE    TRUE     NAs 
+logical      69      24      34 </code></pre>
+</div>
+</div>
+</section>
+<section id="subsetting" class="level3" data-number="1.5.2">
+<h3 data-number="1.5.2" class="anchored" data-anchor-id="subsetting"><span class="header-section-number">1.5.2</span> Subsetting</h3>
+<p>Remind yourself of the various ways to subset a data frame.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb157"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true" tabindex="-1"></a>pdata[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">3</span><span class="sc">:</span><span class="dv">4</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  sex age
+1   M  53
+2   M  19
+3   F  52
+4   M  38
+5   M  57</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb159"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb159-1"><a href="#cb159-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pdata[, <span class="dv">3</span><span class="sc">:</span><span class="dv">5</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  sex age BT
+1   M  53 B2
+2   M  19 B2
+3   F  52 B4
+4   M  38 B1
+5   M  57 B2
+6   M  17 B1</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb161"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb161-1"><a href="#cb161-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(pdata[, <span class="dv">3</span><span class="sc">:</span><span class="dv">5</span>], <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    sex age BT
+125   M  19 T2
+126   M  30 T3
+127   M  29 T2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb163"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pdata<span class="sc">$</span>age)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 53 19 52 38 57 17</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb165"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb165-1"><a href="#cb165-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pdata[pdata<span class="sc">$</span>age <span class="sc">&gt;</span> <span class="dv">21</span>, ])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     id diagnosis sex age BT remission CR   date.cr t.4.11. t.9.22. cyto.normal
+1  1005 5/21/1997   M  53 B2        CR CR  8/6/1997   FALSE    TRUE       FALSE
+3  3002 6/24/1998   F  52 B4        CR CR 8/17/1998      NA      NA          NA
+4  4006 7/17/1997   M  38 B1        CR CR  9/8/1997    TRUE   FALSE       FALSE
+5  4007 7/22/1997   M  57 B2        CR CR 9/17/1997   FALSE   FALSE       FALSE
+10 8001 1/15/1997   M  40 B2        CR CR 3/26/1997   FALSE   FALSE       FALSE
+11 8011 8/21/1998   M  33 B3        CR CR 10/8/1998   FALSE   FALSE       FALSE
+          citog mol.biol fusion.protein mdr   kinet   ccr relapse transplant
+1       t(9;22)  BCR/ABL           p210 NEG dyploid FALSE   FALSE       TRUE
+3          &lt;NA&gt;  BCR/ABL           p190 NEG dyploid FALSE    TRUE      FALSE
+4       t(4;11) ALL1/AF4           &lt;NA&gt; NEG dyploid FALSE    TRUE      FALSE
+5       del(6q)      NEG           &lt;NA&gt; NEG dyploid FALSE    TRUE      FALSE
+10     del(p15)  BCR/ABL           p190 NEG    &lt;NA&gt; FALSE    TRUE      FALSE
+11 del(p15/p16)  BCR/ABL      p190/p210 NEG dyploid FALSE   FALSE       TRUE
+                 f.u date.last.seen
+1  BMT / DEATH IN CR           &lt;NA&gt;
+3                REL     10/15/1999
+4                REL      1/23/1998
+5                REL      11/4/1997
+10               REL      7/11/1997
+11 BMT / DEATH IN CR           &lt;NA&gt;</code></pre>
+</div>
+</div>
+<p>It seems from below that there are 17 females over 40 y (<code>pdata$age</code>) in the dataset, but when subsetting <code>pdata</code> to contain just those individuals, 19 rows are selected. Why?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb167"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb167-1"><a href="#cb167-1" aria-hidden="true" tabindex="-1"></a>idx <span class="ot">&lt;-</span> pdata<span class="sc">$</span>sex <span class="sc">==</span> <span class="st">"F"</span> <span class="sc">&amp;</span> pdata<span class="sc">$</span>age <span class="sc">&gt;</span> <span class="dv">40</span></span>
+<span id="cb167-2"><a href="#cb167-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(idx)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>idx
+FALSE  TRUE 
+  108    17 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb169"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb169-1"><a href="#cb169-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(pdata[idx, ])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 19 21</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solution">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Some patients have a missing <code>sex</code> or <code>age</code>, so <code>idx</code> contains <code>NA</code> values. Indexing a data frame with <code>NA</code> returns a row full of <code>NA</code>s. Wrapping the condition in <code>which()</code> keeps only the <code>TRUE</code> positions.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb171"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb171-1"><a href="#cb171-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(idx, <span class="at">useNA =</span> <span class="st">"ifany"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>idx
+FALSE  TRUE  &lt;NA&gt; 
+  108    17     2 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb173"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb173-1"><a href="#cb173-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(pdata[<span class="fu">which</span>(idx), ])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 17 21</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="factors" class="level3" data-number="1.5.3">
+<h3 data-number="1.5.3" class="anchored" data-anchor-id="factors"><span class="header-section-number">1.5.3</span> Factors</h3>
+<p>The <code>mol.biol</code> column describes the molecular subtype of each tumor. Keep only the patients with <code>BCR/ABL</code> or <code>NEG</code>, and convert the column to a factor.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb175"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb175-1"><a href="#cb175-1" aria-hidden="true" tabindex="-1"></a>bcrabl <span class="ot">&lt;-</span> pdata[pdata<span class="sc">$</span>mol.biol <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"BCR/ABL"</span>, <span class="st">"NEG"</span>), ]</span>
+<span id="cb175-2"><a href="#cb175-2" aria-hidden="true" tabindex="-1"></a>bcrabl<span class="sc">$</span>mol.biol <span class="ot">&lt;-</span> <span class="fu">factor</span>(bcrabl<span class="sc">$</span>mol.biol)</span>
+<span id="cb175-3"><a href="#cb175-3" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(bcrabl<span class="sc">$</span>mol.biol)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+BCR/ABL     NEG 
+     37      73 </code></pre>
+</div>
+</div>
+<p>The <code>BT</code> column describes B- and T-cell subtypes. We can collapse <code>B1</code>, <code>B2</code>, … into <code>B</code> and <code>T1</code>, <code>T2</code>, … into <code>T</code> by renaming the levels with their first letter: levels with the same new name are merged.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb177"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb177-1"><a href="#cb177-1" aria-hidden="true" tabindex="-1"></a>bcrabl<span class="sc">$</span>BT <span class="ot">&lt;-</span> <span class="fu">factor</span>(bcrabl<span class="sc">$</span>BT)</span>
+<span id="cb177-2"><a href="#cb177-2" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(bcrabl<span class="sc">$</span>BT)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "B"  "B1" "B2" "B3" "B4" "T"  "T1" "T2" "T3" "T4"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb179"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb179-1"><a href="#cb179-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(bcrabl<span class="sc">$</span>BT)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ B B1 B2 B3 B4  T T1 T2 T3 T4 
+ 4  9 35 22  9  4  1 15  9  2 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb181"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb181-1"><a href="#cb181-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(bcrabl<span class="sc">$</span>BT) <span class="ot">&lt;-</span> <span class="fu">substring</span>(<span class="fu">levels</span>(bcrabl<span class="sc">$</span>BT), <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb181-2"><a href="#cb181-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(bcrabl<span class="sc">$</span>BT)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ B  T 
+79 31 </code></pre>
+</div>
+</div>
+<p><code>xtabs()</code> counts the number of samples for each combination of two variables.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb183"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb183-1"><a href="#cb183-1" aria-hidden="true" tabindex="-1"></a><span class="fu">xtabs</span>(<span class="sc">~</span> BT <span class="sc">+</span> mol.biol, bcrabl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   mol.biol
+BT  BCR/ABL NEG
+  B      37  42
+  T       0  31</code></pre>
+</div>
+</div>
+</section>
+<section id="summaries-and-a-first-test" class="level3" data-number="1.5.4">
+<h3 data-number="1.5.4" class="anchored" data-anchor-id="summaries-and-a-first-test"><span class="header-section-number">1.5.4</span> Summaries and a first test</h3>
+<p><code>aggregate()</code> computes a summary for each combination of groups, using the formula notation.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb185"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb185-1"><a href="#cb185-1" aria-hidden="true" tabindex="-1"></a><span class="fu">aggregate</span>(age <span class="sc">~</span> mol.biol <span class="sc">+</span> sex, bcrabl, mean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  mol.biol sex      age
+1  BCR/ABL   F 39.93750
+2      NEG   F 30.42105
+3  BCR/ABL   M 40.50000
+4      NEG   M 27.21154</code></pre>
+</div>
+</div>
+<p>Is the age different between <code>BCR/ABL</code> and <code>NEG</code> patients? We visualize it with a boxplot and compare the means with a t-test.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb187"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb187-1"><a href="#cb187-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(age <span class="sc">~</span> mol.biol, bcrabl, <span class="at">ylab =</span> <span class="st">"Age (years)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/all-ttest-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb188"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb188-1"><a href="#cb188-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(age <span class="sc">~</span> mol.biol, bcrabl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Welch Two Sample t-test
+
+data:  age by mol.biol
+t = 4.8172, df = 68.529, p-value = 8.401e-06
+alternative hypothesis: true difference in means between group BCR/ABL and group NEG is not equal to 0
+95 percent confidence interval:
+  7.13507 17.22408
+sample estimates:
+mean in group BCR/ABL     mean in group NEG 
+             40.25000              28.07042 </code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="case-study-weighty-matters" class="level2" data-number="1.6">
+<h2 data-number="1.6" class="anchored" data-anchor-id="case-study-weighty-matters"><span class="header-section-number">1.6</span> Case study: weighty matters</h2>
+<p>This case study is a second walk through data manipulation and visualization. We use data from the US Center for Disease Control’s Behavioral Risk Factor Surveillance System (BRFSS) annual survey: a random sample of 10000 individuals from each of 1990 and 2010.</p>
+<section id="data-input-and-base-plots" class="level3" data-number="1.6.1">
+<h3 data-number="1.6.1" class="anchored" data-anchor-id="data-input-and-base-plots"><span class="header-section-number">1.6.1</span> Data input and base plots</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb190"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb190-1"><a href="#cb190-1" aria-hidden="true" tabindex="-1"></a>brfss <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/BRFSS-subset.csv"</span>)</span>
+<span id="cb190-2"><a href="#cb190-2" aria-hidden="true" tabindex="-1"></a>brfss<span class="sc">$</span>Sex <span class="ot">&lt;-</span> <span class="fu">factor</span>(brfss<span class="sc">$</span>Sex)</span>
+<span id="cb190-3"><a href="#cb190-3" aria-hidden="true" tabindex="-1"></a>brfss<span class="sc">$</span>Year <span class="ot">&lt;-</span> <span class="fu">factor</span>(brfss<span class="sc">$</span>Year)</span>
+<span id="cb190-4"><a href="#cb190-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(brfss)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 20000     5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb192"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb192-1"><a href="#cb192-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(brfss)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Age   Weight    Sex Height Year
+1  31 48.98798 Female 157.48 1990
+2  57 81.64663 Female 157.48 1990
+3  43 80.28585   Male 177.80 1990
+4  72 70.30682   Male 170.18 1990
+5  31 49.89516 Female 154.94 1990
+6  58 54.43108 Female 154.94 1990</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb194"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb194-1"><a href="#cb194-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(brfss)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      Age            Weight           Sex            Height        Year      
+ Min.   :18.00   Min.   : 34.93   Female:12039   Min.   :105.0   1990:10000  
+ 1st Qu.:36.00   1st Qu.: 61.69   Male  : 7961   1st Qu.:162.6   2010:10000  
+ Median :51.00   Median : 72.57                  Median :168.0               
+ Mean   :50.99   Mean   : 75.42                  Mean   :169.2               
+ 3rd Qu.:65.00   3rd Qu.: 86.18                  3rd Qu.:177.8               
+ Max.   :99.00   Max.   :278.96                  Max.   :218.0               
+ NAs    :139     NAs    :649                     NAs    :184                 </code></pre>
+</div>
+</div>
+<p>How many males and females in each year?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb196"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb196-1"><a href="#cb196-1" aria-hidden="true" tabindex="-1"></a><span class="fu">xtabs</span>(<span class="sc">~</span> Sex <span class="sc">+</span> Year, brfss)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        Year
+Sex      1990 2010
+  Female 5718 6321
+  Male   4282 3679</code></pre>
+</div>
+</div>
+<p>A scatterplot of the square root of weight versus height. The square root makes the distribution of weights more symmetric.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb198"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb198-1"><a href="#cb198-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">sqrt</span>(Weight) <span class="sc">~</span> Height, brfss, <span class="at">main =</span> <span class="st">"All Years, Both Sexes"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/brfss-plot-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can color the points by sex: indexing a vector of colors with a factor uses the level of each observation (here <code>Female</code> = 1, <code>Male</code> = 2). With many points, small symbols (<code>pch = 20</code>) and semi-transparent colors reduce over-plotting.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb199"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb199-1"><a href="#cb199-1" aria-hidden="true" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">adjustcolor</span>(<span class="fu">c</span>(<span class="st">"tomato"</span>, <span class="st">"steelblue"</span>), <span class="at">alpha.f =</span> <span class="fl">0.3</span>)</span>
+<span id="cb199-2"><a href="#cb199-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">sqrt</span>(Weight) <span class="sc">~</span> Height, brfss, <span class="at">col =</span> cols[brfss<span class="sc">$</span>Sex], <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb199-3"><a href="#cb199-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"All Years, Both Sexes"</span>)</span>
+<span id="cb199-4"><a href="#cb199-4" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topleft"</span>, <span class="at">legend =</span> <span class="fu">levels</span>(brfss<span class="sc">$</span>Sex), <span class="at">col =</span> cols, <span class="at">pch =</span> <span class="dv">20</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/brfss-plot-col-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Two panels in one figure, with <code>par(mfcol = ...)</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb200"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb200-1"><a href="#cb200-1" aria-hidden="true" tabindex="-1"></a>brfss2010 <span class="ot">&lt;-</span> brfss[brfss<span class="sc">$</span>Year <span class="sc">==</span> <span class="st">"2010"</span>, ]</span>
+<span id="cb200-2"><a href="#cb200-2" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfcol =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb200-3"><a href="#cb200-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">sqrt</span>(Weight) <span class="sc">~</span> Height, brfss2010[brfss2010<span class="sc">$</span>Sex <span class="sc">==</span> <span class="st">"Female"</span>, ],</span>
+<span id="cb200-4"><a href="#cb200-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"2010, Female"</span>)</span>
+<span id="cb200-5"><a href="#cb200-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">sqrt</span>(Weight) <span class="sc">~</span> Height, brfss2010[brfss2010<span class="sc">$</span>Sex <span class="sc">==</span> <span class="st">"Male"</span>, ],</span>
+<span id="cb200-6"><a href="#cb200-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"2010, Male"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/brfss-panels-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb201"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb201-1"><a href="#cb201-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)   <span class="co"># reset 'par' to its original value</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="missing-values-1" class="level3" data-number="1.6.2">
+<h3 data-number="1.6.2" class="anchored" data-anchor-id="missing-values-1"><span class="header-section-number">1.6.2</span> Missing values</h3>
+<p>Some heights and weights are missing. Let’s count them and remove those rows.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb202"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb202-1"><a href="#cb202-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">is.na</span>(brfss<span class="sc">$</span>Height))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 184</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb204"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb204-1"><a href="#cb204-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">is.na</span>(brfss<span class="sc">$</span>Weight))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 649</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb206"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb206-1"><a href="#cb206-1" aria-hidden="true" tabindex="-1"></a>drop <span class="ot">&lt;-</span> <span class="fu">is.na</span>(brfss<span class="sc">$</span>Height) <span class="sc">|</span> <span class="fu">is.na</span>(brfss<span class="sc">$</span>Weight)</span>
+<span id="cb206-2"><a href="#cb206-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(drop)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 735</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb208"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb208-1"><a href="#cb208-1" aria-hidden="true" tabindex="-1"></a>brfss <span class="ot">&lt;-</span> brfss[<span class="sc">!</span>drop, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="ggplot2-graphics" class="level3" data-number="1.6.3">
+<h3 data-number="1.6.3" class="anchored" data-anchor-id="ggplot2-graphics"><span class="header-section-number">1.6.3</span> ggplot2 graphics</h3>
+<p><code>ggplot2</code> builds a plot layer by layer: we specify the data, the <em>aesthetic mapping</em> (which variable goes on which axis, which one defines the color, …) with <code>aes()</code>, and then one or more <em>geometries</em> (<code>geom_point()</code>, <code>geom_boxplot()</code>, …), combined with <code>+</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb209"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb209-1"><a href="#cb209-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(brfss, <span class="fu">aes</span>(<span class="at">x =</span> Height, <span class="at">y =</span> <span class="fu">sqrt</span>(Weight))) <span class="sc">+</span></span>
+<span id="cb209-2"><a href="#cb209-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb209-3"><a href="#cb209-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">"Square root of Weight"</span>) <span class="sc">+</span></span>
+<span id="cb209-4"><a href="#cb209-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"All Years, Both Sexes"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/ggplot-basic-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Color the female and male points differently, or plot them in different panels with <code>facet_grid()</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb210"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb210-1"><a href="#cb210-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(brfss, <span class="fu">aes</span>(<span class="at">x =</span> Height, <span class="at">y =</span> <span class="fu">sqrt</span>(Weight), <span class="at">color =</span> Sex)) <span class="sc">+</span></span>
+<span id="cb210-2"><a href="#cb210-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/ggplot-color-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb211"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb211-1"><a href="#cb211-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(brfss, <span class="fu">aes</span>(<span class="at">x =</span> Height, <span class="at">y =</span> <span class="fu">sqrt</span>(Weight), <span class="at">color =</span> Sex)) <span class="sc">+</span></span>
+<span id="cb211-2"><a href="#cb211-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb211-3"><a href="#cb211-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>(Sex <span class="sc">~</span> .)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/ggplot-color-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Density curves of weight for males and females in 2010:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb212"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb212-1"><a href="#cb212-1" aria-hidden="true" tabindex="-1"></a>brfss2010 <span class="ot">&lt;-</span> brfss[brfss<span class="sc">$</span>Year <span class="sc">==</span> <span class="st">"2010"</span>, ]</span>
+<span id="cb212-2"><a href="#cb212-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(brfss2010, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">sqrt</span>(Weight), <span class="at">fill =</span> Sex)) <span class="sc">+</span></span>
+<span id="cb212-3"><a href="#cb212-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.25</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/ggplot-density-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>A partially specified plot can be saved in an object and completed later. Here we add a linear regression line, with its 95% confidence band, for each sex.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb213"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb213-1"><a href="#cb213-1" aria-hidden="true" tabindex="-1"></a>sps <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(brfss, <span class="fu">aes</span>(<span class="at">x =</span> Height, <span class="at">y =</span> <span class="fu">sqrt</span>(Weight), <span class="at">color =</span> Sex)) <span class="sc">+</span></span>
+<span id="cb213-2"><a href="#cb213-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb213-3"><a href="#cb213-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">"Set1"</span>)</span>
+<span id="cb213-4"><a href="#cb213-4" aria-hidden="true" tabindex="-1"></a>sps <span class="sc">+</span> <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/ggplot-smooth-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="group-summaries-with-dplyr" class="level3" data-number="1.6.4">
+<h3 data-number="1.6.4" class="anchored" data-anchor-id="group-summaries-with-dplyr"><span class="header-section-number">1.6.4</span> Group summaries with dplyr</h3>
+<p>The <code>dplyr</code> package offers a readable way to compute summaries by group. The <strong>pipe</strong> <code>|&gt;</code> passes the object on its left as the first argument of the function on its right, so you can read the code as a sequence of steps: “take <code>brfss</code>, then group by sex and year, then summarize”.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb214"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb214-1"><a href="#cb214-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb214-2"><a href="#cb214-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb214-3"><a href="#cb214-3" aria-hidden="true" tabindex="-1"></a>brfss <span class="sc">|&gt;</span></span>
+<span id="cb214-4"><a href="#cb214-4" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">group_by</span>(Sex, Year) <span class="sc">|&gt;</span></span>
+<span id="cb214-5"><a href="#cb214-5" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">summarize</span>(</span>
+<span id="cb214-6"><a href="#cb214-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb214-7"><a href="#cb214-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">mean_weight =</span> <span class="fu">mean</span>(Weight),</span>
+<span id="cb214-8"><a href="#cb214-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">median_weight =</span> <span class="fu">median</span>(Weight),</span>
+<span id="cb214-9"><a href="#cb214-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">sd_weight =</span> <span class="fu">sd</span>(Weight)</span>
+<span id="cb214-10"><a href="#cb214-10" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 6
+# Groups:   Sex [2]
+  Sex    Year      n mean_weight median_weight sd_weight
+  &lt;fct&gt;  &lt;fct&gt; &lt;int&gt;       &lt;dbl&gt;         &lt;dbl&gt;     &lt;dbl&gt;
+1 Female 1990   5477        64.8          62.1      13.8
+2 Female 2010   5931        73.0          69.4      18.2
+3 Male   1990   4238        81.2          79.4      13.5
+4 Male   2010   3619        88.9          86.2      18.4</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="genomic-data-the-summarizedexperiment" class="level2" data-number="1.7">
+<h2 data-number="1.7" class="anchored" data-anchor-id="genomic-data-the-summarizedexperiment"><span class="header-section-number">1.7</span> Genomic data: the SummarizedExperiment</h2>
+<section id="why-a-dedicated-data-structure" class="level3" data-number="1.7.1">
+<h3 data-number="1.7.1" class="anchored" data-anchor-id="why-a-dedicated-data-structure"><span class="header-section-number">1.7.1</span> Why a dedicated data structure?</h3>
+<p>In a genomic experiment we typically have:</p>
+<ul>
+<li>a <strong>matrix of measurements</strong>, with one row per feature (gene, transcript, …) and one column per sample, e.g., RNA-seq read counts;</li>
+<li>a table describing the <strong>samples</strong> (the <em>sample sheet</em>): treatment, cell line, batch, …;</li>
+<li>a table describing the <strong>features</strong>: gene names, genomic coordinates, …</li>
+</ul>
+<p>We could keep these as three separate objects, but it is very easy to make mistakes: if we remove a sample from the count matrix and forget to remove it from the sample sheet, the two are no longer aligned. The Bioconductor <code>SummarizedExperiment</code> class keeps the three pieces together, so that subsetting the object subsets all of them consistently.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/SummarizedExperiment.png" class="img-fluid figure-img"></p>
+<figcaption>The structure of a SummarizedExperiment</figcaption>
+</figure>
+</div>
+<ul>
+<li><code>assay()</code> / <code>assays()</code>: the matrix (or matrices) of measurements;</li>
+<li><code>colData()</code>: information about the samples (columns);</li>
+<li><code>rowData()</code> / <code>rowRanges()</code>: information about the features (rows);</li>
+<li><code>metadata()</code>: information about the experiment as a whole.</li>
+</ul>
+</section>
+<section id="the-airway-experiment" class="level3" data-number="1.7.2">
+<h3 data-number="1.7.2" class="anchored" data-anchor-id="the-airway-experiment"><span class="header-section-number">1.7.2</span> The airway experiment</h3>
+<p>We use an RNA-seq experiment on airway smooth muscle cells from four donors (the <code>cell</code> column), each treated (<code>trt</code>) or not (<code>untrt</code>) with dexamethasone (the <code>dex</code> column), a corticosteroid used to treat asthma.</p>
+<p>First, we read the read counts. In the file, each row is a sample and each column a gene, so we transpose the table with <code>t()</code> to have genes in rows, as expected by Bioconductor.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb216"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb216-1"><a href="#cb216-1" aria-hidden="true" tabindex="-1"></a>counts_df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/airway-read-counts.csv"</span>, <span class="at">row.names =</span> <span class="dv">1</span>)</span>
+<span id="cb216-2"><a href="#cb216-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(counts_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]     8 33469</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb218"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb218-1"><a href="#cb218-1" aria-hidden="true" tabindex="-1"></a>counts_df[, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           ENSG00000000003 ENSG00000000419 ENSG00000000457 ENSG00000000460
+SRR1039508             679             467             260              60
+SRR1039509             448             515             211              55
+SRR1039512             873             621             263              40
+SRR1039513             408             365             164              35
+SRR1039516            1138             587             245              78
+SRR1039517            1047             799             331              63
+SRR1039520             770             417             233              76
+SRR1039521             572             508             229              60</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb220"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb220-1"><a href="#cb220-1" aria-hidden="true" tabindex="-1"></a>counts <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">as.matrix</span>(counts_df))</span>
+<span id="cb220-2"><a href="#cb220-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(counts)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 33469     8</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb222"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb222-1"><a href="#cb222-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(counts)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516
+ENSG00000000003        679        448        873        408       1138
+ENSG00000000419        467        515        621        365        587
+ENSG00000000457        260        211        263        164        245
+ENSG00000000460         60         55         40         35         78
+ENSG00000000938          0          0          2          0          1
+ENSG00000000971       3251       3679       6177       4252       6721
+                SRR1039517 SRR1039520 SRR1039521
+ENSG00000000003       1047        770        572
+ENSG00000000419        799        417        508
+ENSG00000000457        331        233        229
+ENSG00000000460         63         76         60
+ENSG00000000938          0          0          0
+ENSG00000000971      11027       5176       7995</code></pre>
+</div>
+</div>
+<p>Then we read the sample sheet, and use the run identifier as row names so that they match the column names of the count matrix.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb224"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb224-1"><a href="#cb224-1" aria-hidden="true" tabindex="-1"></a>sample_sheet <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/airway-sample-sheet.csv"</span>)</span>
+<span id="cb224-2"><a href="#cb224-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(sample_sheet) <span class="ot">&lt;-</span> sample_sheet<span class="sc">$</span>Run</span>
+<span id="cb224-3"><a href="#cb224-3" aria-hidden="true" tabindex="-1"></a>sample_sheet<span class="sc">$</span>dex <span class="ot">&lt;-</span> <span class="fu">factor</span>(sample_sheet<span class="sc">$</span>dex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"untrt"</span>, <span class="st">"trt"</span>))</span>
+<span id="cb224-4"><a href="#cb224-4" aria-hidden="true" tabindex="-1"></a>sample_sheet</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           SampleName    cell   dex albut        Run avgLength Experiment
+SRR1039508 GSM1275862  N61311 untrt untrt SRR1039508       126  SRX384345
+SRR1039509 GSM1275863  N61311   trt untrt SRR1039509       126  SRX384346
+SRR1039512 GSM1275866 N052611 untrt untrt SRR1039512       126  SRX384349
+SRR1039513 GSM1275867 N052611   trt untrt SRR1039513        87  SRX384350
+SRR1039516 GSM1275870 N080611 untrt untrt SRR1039516       120  SRX384353
+SRR1039517 GSM1275871 N080611   trt untrt SRR1039517       126  SRX384354
+SRR1039520 GSM1275874 N061011 untrt untrt SRR1039520       101  SRX384357
+SRR1039521 GSM1275875 N061011   trt untrt SRR1039521        98  SRX384358
+              Sample    BioSample
+SRR1039508 SRS508568 SAMN02422669
+SRR1039509 SRS508567 SAMN02422675
+SRR1039512 SRS508571 SAMN02422678
+SRR1039513 SRS508572 SAMN02422670
+SRR1039516 SRS508575 SAMN02422682
+SRR1039517 SRS508576 SAMN02422673
+SRR1039520 SRS508579 SAMN02422683
+SRR1039521 SRS508580 SAMN02422677</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb226"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb226-1"><a href="#cb226-1" aria-hidden="true" tabindex="-1"></a><span class="do">## always check that samples are in the same order!</span></span>
+<span id="cb226-2"><a href="#cb226-2" aria-hidden="true" tabindex="-1"></a><span class="fu">identical</span>(<span class="fu">colnames</span>(counts), <span class="fu">rownames</span>(sample_sheet))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<p>Now we put everything together.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb228"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb228-1"><a href="#cb228-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(SummarizedExperiment)</span>
+<span id="cb228-2"><a href="#cb228-2" aria-hidden="true" tabindex="-1"></a>se <span class="ot">&lt;-</span> <span class="fu">SummarizedExperiment</span>(</span>
+<span id="cb228-3"><a href="#cb228-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">assays =</span> <span class="fu">list</span>(<span class="at">counts =</span> counts),</span>
+<span id="cb228-4"><a href="#cb228-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">colData =</span> sample_sheet</span>
+<span id="cb228-5"><a href="#cb228-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb228-6"><a href="#cb228-6" aria-hidden="true" tabindex="-1"></a>se</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 33469 8 
+metadata(0):
+assays(1): counts
+rownames(33469): ENSG00000000003 ENSG00000000419 ... ENSG00000273492
+  ENSG00000273493
+rowData names(0):
+colnames(8): SRR1039508 SRR1039509 ... SRR1039520 SRR1039521
+colData names(9): SampleName cell ... Sample BioSample</code></pre>
+</div>
+</div>
+</section>
+<section id="exploring-the-object" class="level3" data-number="1.7.3">
+<h3 data-number="1.7.3" class="anchored" data-anchor-id="exploring-the-object"><span class="header-section-number">1.7.3</span> Exploring the object</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb230"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb230-1"><a href="#cb230-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(se)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 33469     8</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb232"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb232-1"><a href="#cb232-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assayNames</span>(se)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "counts"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb234"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb234-1"><a href="#cb234-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(se, <span class="st">"counts"</span>)[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516
+ENSG00000000003        679        448        873        408       1138
+ENSG00000000419        467        515        621        365        587
+ENSG00000000457        260        211        263        164        245
+ENSG00000000460         60         55         40         35         78
+ENSG00000000938          0          0          2          0          1
+                SRR1039517 SRR1039520 SRR1039521
+ENSG00000000003       1047        770        572
+ENSG00000000419        799        417        508
+ENSG00000000457        331        233        229
+ENSG00000000460         63         76         60
+ENSG00000000938          0          0          0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb236"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb236-1"><a href="#cb236-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(se)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 8 rows and 9 columns
+            SampleName        cell      dex       albut         Run avgLength
+           &lt;character&gt; &lt;character&gt; &lt;factor&gt; &lt;character&gt; &lt;character&gt; &lt;integer&gt;
+SRR1039508  GSM1275862      N61311    untrt       untrt  SRR1039508       126
+SRR1039509  GSM1275863      N61311    trt         untrt  SRR1039509       126
+SRR1039512  GSM1275866     N052611    untrt       untrt  SRR1039512       126
+SRR1039513  GSM1275867     N052611    trt         untrt  SRR1039513        87
+SRR1039516  GSM1275870     N080611    untrt       untrt  SRR1039516       120
+SRR1039517  GSM1275871     N080611    trt         untrt  SRR1039517       126
+SRR1039520  GSM1275874     N061011    untrt       untrt  SRR1039520       101
+SRR1039521  GSM1275875     N061011    trt         untrt  SRR1039521        98
+            Experiment      Sample    BioSample
+           &lt;character&gt; &lt;character&gt;  &lt;character&gt;
+SRR1039508   SRX384345   SRS508568 SAMN02422669
+SRR1039509   SRX384346   SRS508567 SAMN02422675
+SRR1039512   SRX384349   SRS508571 SAMN02422678
+SRR1039513   SRX384350   SRS508572 SAMN02422670
+SRR1039516   SRX384353   SRS508575 SAMN02422682
+SRR1039517   SRX384354   SRS508576 SAMN02422673
+SRR1039520   SRX384357   SRS508579 SAMN02422683
+SRR1039521   SRX384358   SRS508580 SAMN02422677</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb238"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb238-1"><a href="#cb238-1" aria-hidden="true" tabindex="-1"></a>se<span class="sc">$</span>dex          <span class="co"># shortcut for colData(se)$dex</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] untrt trt   untrt trt   untrt trt   untrt trt  
+Levels: untrt trt</code></pre>
+</div>
+</div>
+<p>Subsetting works like for a data frame, <code>[genes, samples]</code>, and the sample sheet follows the counts automatically.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb240"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb240-1"><a href="#cb240-1" aria-hidden="true" tabindex="-1"></a>se_untrt <span class="ot">&lt;-</span> se[, se<span class="sc">$</span>dex <span class="sc">==</span> <span class="st">"untrt"</span>]</span>
+<span id="cb240-2"><a href="#cb240-2" aria-hidden="true" tabindex="-1"></a>se_untrt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 33469 4 
+metadata(0):
+assays(1): counts
+rownames(33469): ENSG00000000003 ENSG00000000419 ... ENSG00000273492
+  ENSG00000273493
+rowData names(0):
+colnames(4): SRR1039508 SRR1039512 SRR1039516 SRR1039520
+colData names(9): SampleName cell ... Sample BioSample</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb242"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb242-1"><a href="#cb242-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(se_untrt)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 4 rows and 9 columns
+            SampleName        cell      dex       albut         Run avgLength
+           &lt;character&gt; &lt;character&gt; &lt;factor&gt; &lt;character&gt; &lt;character&gt; &lt;integer&gt;
+SRR1039508  GSM1275862      N61311    untrt       untrt  SRR1039508       126
+SRR1039512  GSM1275866     N052611    untrt       untrt  SRR1039512       126
+SRR1039516  GSM1275870     N080611    untrt       untrt  SRR1039516       120
+SRR1039520  GSM1275874     N061011    untrt       untrt  SRR1039520       101
+            Experiment      Sample    BioSample
+           &lt;character&gt; &lt;character&gt;  &lt;character&gt;
+SRR1039508   SRX384345   SRS508568 SAMN02422669
+SRR1039512   SRX384349   SRS508571 SAMN02422678
+SRR1039516   SRX384353   SRS508575 SAMN02422682
+SRR1039520   SRX384357   SRS508579 SAMN02422683</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb244"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb244-1"><a href="#cb244-1" aria-hidden="true" tabindex="-1"></a>se[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 10 2 
+metadata(0):
+assays(1): counts
+rownames(10): ENSG00000000003 ENSG00000000419 ... ENSG00000001167
+  ENSG00000001460
+rowData names(0):
+colnames(2): SRR1039508 SRR1039509
+colData names(9): SampleName cell ... Sample BioSample</code></pre>
+</div>
+</div>
+</section>
+<section id="descriptive-statistics-on-counts" class="level3" data-number="1.7.4">
+<h3 data-number="1.7.4" class="anchored" data-anchor-id="descriptive-statistics-on-counts"><span class="header-section-number">1.7.4</span> Descriptive statistics on counts</h3>
+<p>The <strong>library size</strong> of a sample is the total number of reads assigned to genes, i.e., the sum of each column.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb246"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb246-1"><a href="#cb246-1" aria-hidden="true" tabindex="-1"></a>lib_size <span class="ot">&lt;-</span> <span class="fu">colSums</span>(<span class="fu">assay</span>(se))</span>
+<span id="cb246-2"><a href="#cb246-2" aria-hidden="true" tabindex="-1"></a>lib_size</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516 SRR1039517 SRR1039520 
+  20637971   18809481   25348649   15163415   24448408   30818215   19126151 
+SRR1039521 
+  21164133 </code></pre>
+</div>
+</div>
+<p>Library sizes differ between samples for technical reasons (how deeply each sample was sequenced), not because of biology. To compare samples, we divide each column by its library size and multiply by one million, obtaining <strong>counts per million</strong> (CPM). <code>sweep()</code> applies an operation to each column of a matrix. A <code>SummarizedExperiment</code> can store several assays with the same dimensions.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb248"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb248-1"><a href="#cb248-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(se, <span class="st">"cpm"</span>) <span class="ot">&lt;-</span> <span class="fu">sweep</span>(<span class="fu">assay</span>(se, <span class="st">"counts"</span>), <span class="dv">2</span>, lib_size, <span class="st">"/"</span>) <span class="sc">*</span> <span class="fl">1e6</span></span>
+<span id="cb248-2"><a href="#cb248-2" aria-hidden="true" tabindex="-1"></a><span class="fu">assayNames</span>(se)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "counts" "cpm"   </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb250"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb250-1"><a href="#cb250-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">assay</span>(se, <span class="st">"cpm"</span>))   <span class="co"># now every sample sums to one million</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516 SRR1039517 SRR1039520 
+     1e+06      1e+06      1e+06      1e+06      1e+06      1e+06      1e+06 
+SRR1039521 
+     1e+06 </code></pre>
+</div>
+</div>
+<p>Let’s look at one gene, <em>DUSP1</em> (<code>ENSG00000120129</code>), known to respond to glucocorticoids.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb252"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb252-1"><a href="#cb252-1" aria-hidden="true" tabindex="-1"></a>dusp1 <span class="ot">&lt;-</span> <span class="fu">assay</span>(se, <span class="st">"cpm"</span>)[<span class="st">"ENSG00000120129"</span>, ]</span>
+<span id="cb252-2"><a href="#cb252-2" aria-hidden="true" tabindex="-1"></a>dusp1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516 SRR1039517 SRR1039520 
+  32.22216  266.88668   47.85265  299.47080   33.37641  205.46291   36.33768 
+SRR1039521 
+ 323.18829 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb254"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb254-1"><a href="#cb254-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(dusp1 <span class="sc">~</span> se<span class="sc">$</span>dex, <span class="at">ylab =</span> <span class="st">"DUSP1 (CPM)"</span>, <span class="at">xlab =</span> <span class="st">""</span>)</span>
+<span id="cb254-2"><a href="#cb254-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stripchart</span>(dusp1 <span class="sc">~</span> se<span class="sc">$</span>dex, <span class="at">vertical =</span> <span class="cn">TRUE</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hand-on-1_files/figure-html/gene-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can also store gene-level summaries in <code>rowData()</code>, so that they stay attached to the right gene.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb255"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb255-1"><a href="#cb255-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rowData</span>(se)<span class="sc">$</span>mean_count <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(<span class="fu">assay</span>(se, <span class="st">"counts"</span>))</span>
+<span id="cb255-2"><a href="#cb255-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rowData</span>(se)<span class="sc">$</span>var_count <span class="ot">&lt;-</span> <span class="fu">apply</span>(<span class="fu">assay</span>(se, <span class="st">"counts"</span>), <span class="dv">1</span>, var)</span>
+<span id="cb255-3"><a href="#cb255-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rowData</span>(se)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 33469 rows and 2 columns
+                mean_count   var_count
+                 &lt;numeric&gt;   &lt;numeric&gt;
+ENSG00000000003    741.875 7.12353e+04
+ENSG00000000419    534.875 1.83390e+04
+ENSG00000000457    242.000 2.28429e+03
+ENSG00000000460     58.375 2.31125e+02
+ENSG00000000938      0.375 5.53571e-01
+...                    ...         ...
+ENSG00000273487      7.875    8.982143
+ENSG00000273488      9.000   19.428571
+ENSG00000273489      0.250    0.214286
+ENSG00000273492      0.125    0.125000
+ENSG00000273493      0.125    0.125000</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="further-reading" class="level2" data-number="1.8">
+<h2 data-number="1.8" class="anchored" data-anchor-id="further-reading"><span class="header-section-number">1.8</span> Further reading</h2>
+<ul>
+<li>Software Carpentry, <a href="https://swcarpentry.github.io/r-novice-gapminder/">R for Reproducible Scientific Analysis</a></li>
+<li>S. Holmes and W. Huber, <a href="https://www.huber.embl.de/msmb/">Modern Statistics for Modern Biology</a></li>
+<li><a href="https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html">SummarizedExperiment vignette</a></li>
+</ul>
+</section>
+<section id="acknowledgements" class="level2" data-number="1.9">
+<h2 data-number="1.9" class="anchored" data-anchor-id="acknowledgements"><span class="header-section-number">1.9</span> Acknowledgements</h2>
+<p>This lab is adapted from material by Martin Morgan, Sonali Arora, Lori Shepherd, and Davide Risso for Bioconductor courses.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../index.html" class="pagination-link" aria-label="Genomica Funzionale e Computazionale">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Genomica Funzionale e Computazionale</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
