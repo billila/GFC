@@ -1,6 +1,6 @@
 ---
 title: "RNA-seq pre-processing"
-author: "Gabriele Sales, Elena Zuin, Sara Potente"
+author: "Ilaria Billato, Elena Zuin"
 output:
   html_document:
     theme: cerulean
