@@ -1,6 +1,7 @@
 project:
   type: book
-
+  resources:
+    - "!esercitazioni/data/luad.rds"
 book:
   title: "Genomica Funzionale e Computazionale"
   subtitle: "A.A. 2026-2027"
@@ -23,12 +24,11 @@ book:
     #     - lezioni/computational-genomics/07-rnaseq-processing.qmd
     #     - lezioni/computational-genomics/08-differential-expression.qmd
     #     - lezioni/computational-genomics/09-pathways-networks.qmd
-    # - part: "Esercitazioni Genomica Computazionale"
-    #   chapters:
-    #     - esercitazioni/hands-on-1.qmd
-    #     - esercitazioni/hands-on-2.qmd
-    #     - esercitazioni/hands-on-3.qmd
-    #     - esercitazioni/hands-on-4-deg.qmd
+    - part: "Esercitazioni Genomica Computazionale"
+      chapters:
+        - esercitazioni/hand-on-1.qmd
+        # - esercitazioni/hand-on-2.qmd
+        # - esercitazioni/hand-on-3.qmd
 
 # bibliography: references.bib
 
