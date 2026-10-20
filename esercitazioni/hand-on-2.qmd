@@ -1,15 +1,11 @@
 ---
-title: "RNA-seq pre-processing"
-author: "Ilaria Billato, Elena Zuin"
-output:
-  html_document:
-    theme: cerulean
-    toc: yes
-    toc_depth: 3
-    number_sections: true
-  pdf_document:
-    toc: yes
-    toc_depth: '3'
+title: "Lab 2: RNA-seq pre-processing"
+execute:
+  echo: true
+  warning: false
+  message: false
+resources:
+  - data/*
 ---
 
 ```{r, include = FALSE}
@@ -50,7 +46,6 @@ To install core packages, necessary for all practical lectures, we use the `inst
 # BiocManager::install(c("limma", "EDASeq", "edgeR"))
 ```
 
-
 # Load packages
 
 ```{r, message=FALSE}
@@ -62,6 +57,8 @@ library(plyr)
 library(corrplot)
 library(ggfortify)
 library(SummarizedExperiment)
+library(ggplot2)
+library(tidyr)
 ```
 
 # SummarizedExperiment
@@ -70,9 +67,8 @@ In this tutorial, we will use the lung adenocarcinoma (LUAD) dataset from The Ca
 
 We will load the dataset previously saved in an RDS file.
 
-
 ```{r, message=FALSE}
-luad <- readRDS("/home/ilaria/Documents/GFC/esercitazioni/data/luad.rds")
+luad <- readRDS("data/luad.rds")
 luad
 class(luad)
 ```
@@ -81,7 +77,7 @@ The object luad is a RangedSummarizedExperiment, a specialized subclass of **Sum
 
 The **SummarizedExperiment** class is a data structure commonly used in the analysis of biological data, such as genomic or transcriptomic datasets. It is designed to store experimental measurements (e.g., a count matrix) together with associated metadata describing the features and the samples.
 
-![](se.png)
+![](images/SummarizedExperiment.png)
 
 A **SummarizedExperiment** object contains several components useful for storing and analyzing high-throughput genomic data:
 
@@ -116,6 +112,7 @@ table(luad$paper_Survival)
 
 ```{r, message=FALSE}
 rownames(luad)[1:6]
+rownames(luad) <- substr(rownames(luad), 1, 15)
 ```
 
 - `rowData()` and `rowRanges()` return information about the genes, such as gene or transcript IDs. These data are stored in a DataFrame object. Additionally, `rowRanges()` provides the chromosome and genomic coordinates for each gene.
@@ -135,51 +132,15 @@ metadata(luad)
 
 For a more detailed description see [Bioconductor vignette](https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html).
 
-```{r}
-rownames(luad) <- substr(rownames(luad), 1, 15)
-```
-
-
-Now, let's visualize the patient cohort based on the clinical annotations coded by *paper_xxx* (clinical variable columns 74:93).
-To automatically create a data description table we use the `summary()` command:
-
-```{r, message=FALSE}
-vars <- colData(luad)[, 74:93]
-vars <- colData(luad)[, grepl("paper_", colnames(colData(luad)))]
-
-summary(data.frame(vars))
-```
-
 For an understanding of the clinical variables regarding lung cancer staging, look at [IEO website](https://www.ieo.it/it/PER-I-PAZIENTI/Cure/Tumori-al-polmone/), while for the other variables, refer to the original work published in [Nature in 2014](https://www.nature.com/articles/nature13385) in particular to Figure 5 of the work.
-
-The data description table is useful to check the presence of missing values (NAs) and the variables are interpreted correctly.
-
-<div class = "blue">
-**Exercise 1**: Compute the mean of the age at diagnosis (`paper_Age.at.diagnosis`) 
-
-```{r, message=FALSE}
-# Age at diagnosis is stored as a factor variable in the dataset.
-class(luad$paper_Age.at.diagnosis)
-
-mean_age <- mean(luad$paper_Age.at.diagnosis)
-```
-
-The mean of age at diagnosis returns NA. So we have to convert this variable to a numeric vector. 
-
-```{r}
-luad$paper_Age.at.diagnosis <- as.numeric(luad$paper_Age.at.diagnosis)
-class(luad$paper_Age.at.diagnosis)
-# We have to remove the NAs
-mean_age <- mean(luad$paper_Age.at.diagnosis, na.rm = TRUE)
-```
-</div>
-***
 
 ## Patients selection
 
 For the next analysis we select the patients who have the smoking status different to a missing value.
 
 ```{r}
+summary(luad$paper_Smoking.Status)
+# We remove NAs
 luad <- luad[, !is.na(luad$paper_Smoking.Status)]
 summary(luad$paper_Smoking.Status)
 ```
@@ -191,21 +152,17 @@ luad <- luad[, luad$paper_Smoking.Status != "[Not Available]"]
 luad
 ```
 
-The dataset has been filtered and now contains 237 patients.
-Next, we identify genes that have all zero counts across all samples and remove them from the dataset. Maybe this filtering is not sufficient to remove all the low quality genes. We see this later
-
-Next, we identify genes that have all zero counts across all samples and remove them from the dataset. 
+The dataset has been filtered and now contains 237 patients. The filtering step is important to remove all low-quality genes. In particular, we decide to keep only the genes with raw counts $\geq 10$.
 
 ```{r}
 # There are 3467 genes whose sum is equal to zero
 table(rowSums(assay(luad, "raw_count")) == 0)
+table(rowSums(assay(luad, "raw_count")) >= 10)
 
-# We keep the genes with the sum > 0
-luad <- luad[rowSums(assay(luad, "raw_count")) > 0, ]
+# We keep the genes with the sum > 10
+luad <- luad[rowSums(assay(luad, "raw_count")) >= 10, ]
 luad
 ```
-
-This filtering step may not be sufficient to remove all low-quality genes, but we will fix this issue in the next tutorial.
 
 # Biological question
 
@@ -217,7 +174,7 @@ table(luad$paper_expression_subtype)
 
 # Exploratory gene expression analysis
 
-Every RNA-seq study begins with exploratory data analysis, where the data are visualized using boxplots, MD/MA plots, RLE plots, and Principal Component Analysis (PCA). These visualizations help answer key questions:
+Every RNA-seq study begins with exploratory data analysis, where the data are visualized using boxplots, MD/MA plots, RLE plots, and principal component analysis (PCA). These visualizations help answer key questions:
 
   - Do different conditions or groups show distinct expression profiles?
   - Are there any outlier samples?
@@ -228,8 +185,7 @@ We can start by visualizing the data using a boxplot. Before plotting, it is oft
 
   - RNA-seq samples often have different sequencing depths. Log transformation stabilizes the variance and makes the distributions more comparable across samples;
   - most genes have low counts, and a few have very high counts. Log transformation makes the data more balanced and easier to analyze;
-  - adding 1 in log(counts + 1) allows us to transform zero counts, which would otherwise be undefined;
-  - improve interpretability.
+  - adding 1 in log(counts + 1) allows us to transform zero counts, which would otherwise be undefined.
 
 In R, we can apply this transformation using the `log1p()` function:
 
@@ -240,7 +196,13 @@ raw_count <- assay(luad, "raw_count")
 boxplot(raw_count[, 1:20])
 
 # To make readable the boxplot on all we reduce the string of column names.
-colnames(raw_count) <- substr(colnames(raw_count), 9, 20)
+colnames(raw_count) <- substr(colnames(raw_count), 9, 29)
+
+# Check whether there are any duplicate sample names.
+table(duplicated(colnames(raw_count)))
+
+colnames(luad) <- substr(colnames(luad), 9, 29)
+
 boxplot(log1p(raw_count)[, 1:20])
 
 col <- luad$paper_expression_subtype
@@ -251,21 +213,9 @@ boxplot(log1p(raw_count)[, 1:20], col = col, xlab = "Sample", ylab = "log1p expr
 legend("top", legend = c("prox.-inflam","prox.-prolif.", "TRU"), col = 1:3, pch = 20, cex = 0.7, ncol = 2)
 ```
 
-
-<style>
-  div.blue{background-color:#e6f0ff; border-radius: 4px; padding: 15px;}
-  div.pink{background-color:#ffffcc; border-radius: 4px; padding: 15px;}
-</style>
-
-***
-
-<div class = "blue">
-**Exercise 2**: Recreate the boxplot using tidyverse and ggplot2
+We can recreate the boxplot using tidyverse and ggplot2 packages.
 
 ```{r, message=FALSE}
-library(ggplot2)
-library(tidyr)
-
 log1p <- log1p((raw_count)[, 1:20])
 
 df <- as.data.frame(log1p)
@@ -274,7 +224,7 @@ df$gene <- rownames(df)
 df_long <- pivot_longer(df, cols = -gene, names_to = "Sample", values_to = "Expression")
 
 subtype <- colData(luad)$paper_expression_subtype[1:20]
-names(subtype) <- substr(colnames(luad)[1:20], 9, 20)
+names(subtype) <- colnames(raw_count)[1:20]
 df_long$Subtype <- subtype[df_long$Sample]
 
 # Plot with ggplot2
@@ -286,9 +236,6 @@ ggplot(df_long, aes(x = Sample, y = Expression, fill = Subtype)) +
        y = "log1p(Expression)",
        fill = "Subtype")
 ```
-
-</div>
-***
 
 ## MD or MA charts
 
@@ -323,7 +270,7 @@ plotRLE(raw_count, outline = FALSE, las = 2,
         ylab = "RLE", main = "RLE of raw counts", col = col)
 ```
 
-As expected the **RLE** graphs are very heterogeneous. In the next lession we will check how they change after normalization.
+As expected the **RLE** graphs are very heterogeneous.
 
 ## Principal Component Analysis
 
@@ -342,20 +289,10 @@ autoplot(pca)
 
 The Principal Component matrix has the same dimensions as the original data matrix; however, many of the PCs may not be informative, so a reduction in the number of PCs is typically required. To do so, it is useful to examine the amount of variance explained by each new PC vector, using the scree plot criterion. The number of components to be chosen corresponds variance drops dramatically in size.
 
-In this case we choose the first two components.
+In this case we choose the first three components.
 
 ```{r}
 screeplot(pca, type = c("lines"))
-```
-
-# Filtering (?)
-
-In the previous part of the lesson, genes with all zero counts were removed. However, this is not sufficient because it does not eliminate genes with very low counts. We decided to keep only the genes with raw counts $\geq 10$.
-
-```{r}
-luad_sel <- luad[rowSums(assay(luad, "raw_count")) >= 10, ]
-luad_sel
-
 ```
 
 # Normalization
@@ -364,22 +301,13 @@ Normalization of RNA-seq read counts is an essential procedure that corrects for
 
 ## Within samples normalization
 
-The within-samples normalization is necessary for GC-content bias.
-
-come giustifichiamo che non gliela facciamo vedere? mettiamo un png che mostra la differenza tra le due? 
-
-e diciamo che in questi dati non ne abbiamo bisogno + reference link per farla
+The within-samples normalization is necessary for GC-content bias. For a more detailed description see [EDASeq vignette](https://bioconductor.org/packages/devel/bioc/vignettes/EDASeq/inst/doc/EDASeq.html#retrieving-gene-length-and-gc-content).
 
 ## Between samples normalization
 
-After the within normalization we can compute the between normalization, using an R packages: **edgeR**.
-
-
-We can utilize the `calcNormFactors` and `cpm` functions to estimate the normalizing factors for `RLE`, `TMM`, `upper quartile`, and `total count` normalizations.
+Next, we compute the between normalization, using an R packages: **edgeR** package. We can utilize the `calcNormFactors` and `cpm` functions to estimate the normalizing factors for `RLE`, `TMM`, `upper quartile`, and `total count` normalizations.
 
 ```{r}
-raw_count <- assay(luad_sel, "raw_count")
-
 lbs <- calcNormFactors(raw_count, method = "RLE")
 rle <- cpm(raw_count, lib.size = lbs * colSums(raw_count))
 
@@ -391,7 +319,6 @@ uq <- cpm(raw_count, lib.size = lbs * colSums(raw_count))
 
 tc <- cpm(raw_count)
 ```
-
 
 ### Boxplot
 
@@ -419,9 +346,6 @@ boxplot(log2(uq + 1), outline=FALSE,  las=2,
 Expression matrix visualization after normalization using RLE plot.
 
 ```{r}
-col <- luad$paper_expression_subtype
-levels(col) <- c(1:3)
-
 EDASeq::plotRLE(raw_count, outline = FALSE,  las=2, col=col,
         ylab = "RLE", main = "RLE before normalization", xaxt='n')
 
@@ -438,7 +362,6 @@ EDASeq::plotRLE(uq, outline = FALSE,  las=2, col=col,
         ylab = "RLE", main = "RLE upper quartile", xaxt='n')
 ```
 
-
 ### Principal component analysis
 
 PCA analysis in the context of normalization performance assessment is useful only if  an *a priori* biological information on sample stratification is available. It is reasonable to select the normalization that better recognize the known stratification.
@@ -446,26 +369,23 @@ PCA analysis in the context of normalization performance assessment is useful on
 Now let's see the basic functions of R to make *PCA* and then we will use the data normalized with the *TMM* to explore the results. Finally we will use the *plotPCA* function to plot scores across all the normalizations.
 
 ```{r}
-luad_pca <- prcomp(t(log1p(tmm)))
-tmp <- summary(luad_pca)
+pca_tmm <- prcomp(t(log1p(tmm)))
+tmp <- summary(pca_tmm)
 tmp$importance[, 1:20]
 
-autoplot(luad_pca)
-screeplot(luad_pca, type = c("lines"))  
-```
+autoplot(pca_tmm)
 
-Now we use the *plotPCA*:
-  
-```{r}
-EDASeq::plotPCA(tc, k=3, labels=F, col=as.numeric(col), pch=20)
-EDASeq::plotPCA(tmm, k=3, labels=F, col=as.numeric(col), pch=20)
-EDASeq::plotPCA(rle, k=3, labels=F, col=as.numeric(col), pch=20)
-```
+metadata <- colData(luad)
 
+autoplot(pca_tmm, data = metadata, colour = "paper_expression_subtype") +
+  scale_color_manual(values = c("prox.-inflam" = "black", "prox.-prolif." = "red", "TRU" = "green"))
+
+screeplot(pca_tmm, type = c("lines"))  
+```
 
 # Save the data for the next tutorial
 
 ```{r}
-save(list = c("luad_sel", "luad", "tmm", "rle", "tc", "raw_count"), file = "normalization.RData")
+save(list = c("luad", "tmm", "rle", "tc", "raw_count"), file = "normalization.RData")
 ```
 
