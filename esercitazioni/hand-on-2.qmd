@@ -21,7 +21,7 @@ In this tutorial we'll explore the exploratory gene expression analysis and norm
 We install R packages with the *install.packages* function.
 
 ```{r, eval=FALSE}
-install.packages(c("dplyr", "plyr", "corrplot", "ggfortify"))
+# install.packages(c("dplyr", "plyr", "corrplot", "ggfortify"))
 ```
 
 ### Bioconductor installation 
@@ -32,8 +32,8 @@ For more information, see the [Bioconductor website](https://www.bioconductor.or
 Installing Bioconductor requires the **BiocManager** package. 
 
 ```{r, eval=FALSE}
-if (!require("BiocManager", quietly = TRUE)) 
-  install.packages("BiocManager")
+# if (!require("BiocManager", quietly = TRUE)) 
+#   install.packages("BiocManager")
 # Last version of Bioconductor
 # BiocManager::install(version = "3.23")
 ```
@@ -81,7 +81,7 @@ The **SummarizedExperiment** class is a data structure commonly used in the anal
 
 A **SummarizedExperiment** object contains several components useful for storing and analyzing high-throughput genomic data:
 
-- `assays()` returns a list of gene expression matrices (e.g., raw and normalized counts). In the luad object, raw_count contains the raw count matrix with 60,606 genes (rows) and 539 samples (columns). For this tutorial, we will focus on raw_count and ignore the other matrix, normalized_count.
+- `assays()` returns a list of gene expression matrices (e.g., raw and normalized counts). In the luad object, raw_count contains the raw count matrix with 60,606 genes (rows) and 539 samples (columns).
 
 ```{r, message=FALSE}
 assays(luad)
@@ -386,6 +386,6 @@ screeplot(pca_tmm, type = c("lines"))
 ## Save the data for the next tutorial
 
 ```{r}
-save(list = c("luad", "tmm", "rle", "tc", "raw_count"), file = "normalization.RData")
+save(list = c("luad", "tmm"), file = "normalization.RData")
 ```
 
