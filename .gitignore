@@ -8,3 +8,4 @@
 *.rds
 *.RData
 esercitazioni/data/luad.rds
+_book/esercitazioni/data/luad.rds

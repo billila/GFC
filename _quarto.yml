@@ -27,7 +27,7 @@ book:
     - part: "Esercitazioni Genomica Computazionale"
       chapters:
         - esercitazioni/hand-on-1.qmd
-        - esercitazioni/hand-on-2.html
+        - esercitazioni/hand-on-2.qmd
         # - esercitazioni/hand-on-3.qmd
 
 # bibliography: references.bib
