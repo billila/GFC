@@ -1,5 +1,5 @@
 ---
-title: "Lab 2: RNA-seq pre-processing"
+title: "Lab 2: RNA-seq pre-processing and normalization"
 execute:
   echo: true
   warning: false
@@ -12,11 +12,11 @@ resources:
 knitr::opts_chunk$set(echo = TRUE, fig.width=8, fig.height=6, fig.path = "fig/preprocessing-")
 ```
 
-# Introduction
+## Introduction
 
-In this tutorial we'll explore the exploratory gene expression analysis using Bioconductor packages.
+In this tutorial we'll explore the exploratory gene expression analysis and normalization using Bioconductor packages.
 
-## R packages installation
+### R packages installation
 
 We install R packages with the *install.packages* function.
 
@@ -24,7 +24,7 @@ We install R packages with the *install.packages* function.
 install.packages(c("dplyr", "plyr", "corrplot", "ggfortify"))
 ```
 
-## Bioconductor installation 
+### Bioconductor installation 
 
 Bioconductor is a free, open-source, and open-development software project. It is based primarily on the statistical programming language R and provides packages for the analysis and interpretation of high-throughput genomic data.
 For more information, see the [Bioconductor website](https://www.bioconductor.org/).
@@ -46,7 +46,7 @@ To install core packages, necessary for all practical lectures, we use the `inst
 # BiocManager::install(c("limma", "EDASeq", "edgeR"))
 ```
 
-# Load packages
+### Load packages
 
 ```{r, message=FALSE}
 library(limma)
@@ -61,7 +61,7 @@ library(ggplot2)
 library(tidyr)
 ```
 
-# SummarizedExperiment
+## SummarizedExperiment
 
 In this tutorial, we will use the lung adenocarcinoma (LUAD) dataset from The Cancer Genome Atlas (TCGA), a program that collects genomic mutations data from different types of tumors.
 
@@ -134,7 +134,7 @@ For a more detailed description see [Bioconductor vignette](https://bioconductor
 
 For an understanding of the clinical variables regarding lung cancer staging, look at [IEO website](https://www.ieo.it/it/PER-I-PAZIENTI/Cure/Tumori-al-polmone/), while for the other variables, refer to the original work published in [Nature in 2014](https://www.nature.com/articles/nature13385) in particular to Figure 5 of the work.
 
-## Patients selection
+### Patients selection
 
 For the next analysis we select the patients who have the smoking status different to a missing value.
 
@@ -164,7 +164,7 @@ luad <- luad[rowSums(assay(luad, "raw_count")) >= 10, ]
 luad
 ```
 
-# Biological question
+## Biological question
 
 The aim of our analysis is to identify the transcriptional differences between the three LUAD subtypes: terminal respiratory unit (TRU), proximal-inflammatory (prox.-inflam), and proximal-proliferative (prox.-prolif). The subtype information is stored in the *paper_expression_subtype* variable.
 
@@ -172,14 +172,14 @@ The aim of our analysis is to identify the transcriptional differences between t
 table(luad$paper_expression_subtype)
 ```
 
-# Exploratory gene expression analysis
+## Exploratory gene expression analysis
 
 Every RNA-seq study begins with exploratory data analysis, where the data are visualized using boxplots, MD/MA plots, RLE plots, and principal component analysis (PCA). These visualizations help answer key questions:
 
   - Do different conditions or groups show distinct expression profiles?
   - Are there any outlier samples?
 
-## Boxplot
+### Boxplot
 
 We can start by visualizing the data using a boxplot. Before plotting, it is often necessary to transform the count matrix using a `log(counts + 1)` transformation. This transformation is important because:
 
@@ -237,7 +237,7 @@ ggplot(df_long, aes(x = Sample, y = Expression, fill = Subtype)) +
        fill = "Subtype")
 ```
 
-## MD or MA charts
+### MD or MA charts
 
 In addition to the boxplot we can use the MA or MD charts. 
 
@@ -259,7 +259,7 @@ MDPlot(raw_count, c(6, 7))
 MDPlot(raw_count, c(7, 6))
 ```
 
-## RLE plot
+### RLE plot
 
 Next, we visualize the data using an RLE (Relative Log Expression) plot before normalization, using the `plotRLE()` function from the **EDASeq** package.
 
@@ -272,7 +272,7 @@ plotRLE(raw_count, outline = FALSE, las = 2,
 
 As expected the **RLE** graphs are very heterogeneous.
 
-## Principal Component Analysis
+### Principal Component Analysis
 
 Principal component analysis (PCA) is used to project a high-dimensional dataset (where the number of dimensions equals the number of genes or transcripts) onto few dimensions. In R, PCA can be computed using the built-in `prcomp()` function.
 
@@ -295,15 +295,15 @@ In this case we choose the first three components.
 screeplot(pca, type = c("lines"))
 ```
 
-# Normalization
+## Normalization
 
 Normalization of RNA-seq read counts is an essential procedure that corrects for non-biological variation of samples due to library preparation, sequencing read depth, gene length, mapping bias and other technical issues. Normalization is composed of two main steps: within-sample normalization and between-sample normalization.
 
-## Within samples normalization
+### Within samples normalization
 
 The within-samples normalization is necessary for GC-content bias. For a more detailed description see [EDASeq vignette](https://bioconductor.org/packages/devel/bioc/vignettes/EDASeq/inst/doc/EDASeq.html#retrieving-gene-length-and-gc-content).
 
-## Between samples normalization
+### Between samples normalization
 
 Next, we compute the between normalization, using an R packages: **edgeR** package. We can utilize the `calcNormFactors` and `cpm` functions to estimate the normalizing factors for `RLE`, `TMM`, `upper quartile`, and `total count` normalizations.
 
@@ -320,7 +320,7 @@ uq <- cpm(raw_count, lib.size = lbs * colSums(raw_count))
 tc <- cpm(raw_count)
 ```
 
-### Boxplot
+#### Boxplot
 
 Expression matrix visualization after normalization using boxplot.
 
@@ -341,7 +341,7 @@ boxplot(log2(uq + 1), outline=FALSE,  las=2,
         ylab = "log(count+1)", main = "Boxplot Upper quartile", xaxt = 'n')
 ```
 
-### RLE plot
+#### RLE plot
 
 Expression matrix visualization after normalization using RLE plot.
 
@@ -362,7 +362,7 @@ EDASeq::plotRLE(uq, outline = FALSE,  las=2, col=col,
         ylab = "RLE", main = "RLE upper quartile", xaxt='n')
 ```
 
-### Principal component analysis
+#### Principal component analysis
 
 PCA analysis in the context of normalization performance assessment is useful only if  an *a priori* biological information on sample stratification is available. It is reasonable to select the normalization that better recognize the known stratification.
 
@@ -383,7 +383,7 @@ autoplot(pca_tmm, data = metadata, colour = "paper_expression_subtype") +
 screeplot(pca_tmm, type = c("lines"))  
 ```
 
-# Save the data for the next tutorial
+## Save the data for the next tutorial
 
 ```{r}
 save(list = c("luad", "tmm", "rle", "tc", "raw_count"), file = "normalization.RData")
