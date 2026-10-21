@@ -273,7 +273,7 @@ window.Quarto = {
 <h3 data-number="2.1.1" class="anchored" data-anchor-id="r-packages-installation"><span class="header-section-number">2.1.1</span> R packages installation</h3>
 <p>We install R packages with the <em>install.packages</em> function.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"dplyr"</span>, <span class="st">"plyr"</span>, <span class="st">"corrplot"</span>, <span class="st">"ggfortify"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages(c("dplyr", "plyr", "corrplot", "ggfortify"))</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="bioconductor-installation" class="level3" data-number="2.1.2">
@@ -281,8 +281,8 @@ window.Quarto = {
 <p>Bioconductor is a free, open-source, and open-development software project. It is based primarily on the statistical programming language R and provides packages for the analysis and interpretation of high-throughput genomic data. For more information, see the <a href="https://www.bioconductor.org/">Bioconductor website</a>.</p>
 <p>Installing Bioconductor requires the <strong>BiocManager</strong> package.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(<span class="st">"BiocManager"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) </span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">"BiocManager"</span>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># if (!require("BiocManager", quietly = TRUE)) </span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   install.packages("BiocManager")</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Last version of Bioconductor</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># BiocManager::install(version = "3.23")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -1030,7 +1030,7 @@ Cumulative Proportion  0.599440 0.607470</code></pre>
 <section id="save-the-data-for-the-next-tutorial" class="level2" data-number="2.6">
 <h2 data-number="2.6" class="anchored" data-anchor-id="save-the-data-for-the-next-tutorial"><span class="header-section-number">2.6</span> Save the data for the next tutorial</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(<span class="at">list =</span> <span class="fu">c</span>(<span class="st">"luad"</span>, <span class="st">"tmm"</span>, <span class="st">"rle"</span>, <span class="st">"tc"</span>, <span class="st">"raw_count"</span>), <span class="at">file =</span> <span class="st">"normalization.RData"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(<span class="at">list =</span> <span class="fu">c</span>(<span class="st">"luad"</span>, <span class="st">"tmm"</span>), <span class="at">file =</span> <span class="st">"normalization.RData"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 
 
