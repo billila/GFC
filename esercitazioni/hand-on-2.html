@@ -2,23 +2,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.8.25">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>2&nbsp; Lab 2: RNA-seq pre-processing – Genomica Funzionale e Computazionale</title>
+<title>Lab 2: RNA-seq pre-processing and normalization</title>
 <style>
-/* Default styles provided by pandoc.
-** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-*/
+code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: 1.5em;}
-div.column{flex: auto;}
-@media screen {
-div.columns{gap: min(4vw, 1.5em);}
-div.column{overflow-x: auto;}
-}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -64,54 +58,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<link href="../esercitazioni/hand-on-1.html" rel="prev">
-<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-11eefd8cbe996b25305c2344f7c5b556.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
-<script id="quarto-search-options" type="application/json">{
-  "location": "sidebar",
-  "copy-button": false,
-  "collapse-after": 3,
-  "panel-placement": "start",
-  "type": "textbox",
-  "limit": 50,
-  "keyboard-shortcut": [
-    "f",
-    "/",
-    "s"
-  ],
-  "show-item-context": false,
-  "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
-    "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
-  }
-}</script>
+<script src="hand-on-2_files/libs/clipboard/clipboard.min.js"></script>
+<script src="hand-on-2_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="hand-on-2_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="hand-on-2_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="hand-on-2_files/libs/quarto-html/popper.min.js"></script>
+<script src="hand-on-2_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="hand-on-2_files/libs/quarto-html/anchor.min.js"></script>
+<link href="hand-on-2_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="hand-on-2_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="hand-on-2_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="hand-on-2_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="hand-on-2_files/libs/bootstrap/bootstrap-cddbbb9af240c0c08ac0b3e309608af2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -140,123 +101,17 @@ window.Quarto = {
 };
 </script>
 
-<link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-sidebar floating quarto-light">
+<body class="fullcontent quarto-light">
 
-<div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-1.html">Esercitazioni Genomica Computazionale</a></li><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-2.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Lab 2: RNA-seq pre-processing</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
-        <i class="bi bi-search"></i>
-      </button>
-    </div>
-  </nav>
-</header>
-<!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
-<!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
-    <div class="pt-lg-2 mt-2 text-left sidebar-header">
-    <div class="sidebar-title mb-0 py-0">
-      <a href="../">Genomica Funzionale e Computazionale</a> 
-    </div>
-      </div>
-        <div class="mt-2 flex-shrink-0 align-items-center">
-        <div class="sidebar-search">
-        <div id="quarto-search" class="" title="Search"></div>
-        </div>
-        </div>
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Genomica Funzionale e Computazionale</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Esercitazioni Genomica Computazionale</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../esercitazioni/hand-on-1.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Lab 1: Introduction to R and Bioconductor</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../esercitazioni/hand-on-2.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Lab 2: RNA-seq pre-processing</span></span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-    </ul>
-    </div>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
-<!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Table of contents</h2>
-   
-  <ul>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">3</span> Introduction</a>
-  <ul class="collapse">
-  <li><a href="#r-packages-installation" id="toc-r-packages-installation" class="nav-link" data-scroll-target="#r-packages-installation"><span class="header-section-number">3.1</span> R packages installation</a></li>
-  <li><a href="#bioconductor-installation" id="toc-bioconductor-installation" class="nav-link" data-scroll-target="#bioconductor-installation"><span class="header-section-number">3.2</span> Bioconductor installation</a>
-  <ul class="collapse">
-  <li><a href="#bioconductor-packages-installation" id="toc-bioconductor-packages-installation" class="nav-link" data-scroll-target="#bioconductor-packages-installation"><span class="header-section-number">3.2.1</span> Bioconductor packages installation</a></li>
-  </ul></li>
-  </ul></li>
-  <li><a href="#load-packages" id="toc-load-packages" class="nav-link" data-scroll-target="#load-packages"><span class="header-section-number">4</span> Load packages</a></li>
-  <li><a href="#summarizedexperiment" id="toc-summarizedexperiment" class="nav-link" data-scroll-target="#summarizedexperiment"><span class="header-section-number">5</span> SummarizedExperiment</a>
-  <ul class="collapse">
-  <li><a href="#patients-selection" id="toc-patients-selection" class="nav-link" data-scroll-target="#patients-selection"><span class="header-section-number">5.1</span> Patients selection</a></li>
-  </ul></li>
-  <li><a href="#biological-question" id="toc-biological-question" class="nav-link" data-scroll-target="#biological-question"><span class="header-section-number">6</span> Biological question</a></li>
-  <li><a href="#exploratory-gene-expression-analysis" id="toc-exploratory-gene-expression-analysis" class="nav-link" data-scroll-target="#exploratory-gene-expression-analysis"><span class="header-section-number">7</span> Exploratory gene expression analysis</a>
-  <ul class="collapse">
-  <li><a href="#boxplot" id="toc-boxplot" class="nav-link" data-scroll-target="#boxplot"><span class="header-section-number">7.1</span> Boxplot</a></li>
-  <li><a href="#md-or-ma-charts" id="toc-md-or-ma-charts" class="nav-link" data-scroll-target="#md-or-ma-charts"><span class="header-section-number">7.2</span> MD or MA charts</a></li>
-  <li><a href="#rle-plot" id="toc-rle-plot" class="nav-link" data-scroll-target="#rle-plot"><span class="header-section-number">7.3</span> RLE plot</a></li>
-  <li><a href="#principal-component-analysis" id="toc-principal-component-analysis" class="nav-link" data-scroll-target="#principal-component-analysis"><span class="header-section-number">7.4</span> Principal Component Analysis</a></li>
-  </ul></li>
-  <li><a href="#normalization" id="toc-normalization" class="nav-link" data-scroll-target="#normalization"><span class="header-section-number">8</span> Normalization</a>
-  <ul class="collapse">
-  <li><a href="#within-samples-normalization" id="toc-within-samples-normalization" class="nav-link" data-scroll-target="#within-samples-normalization"><span class="header-section-number">8.1</span> Within samples normalization</a></li>
-  <li><a href="#between-samples-normalization" id="toc-between-samples-normalization" class="nav-link" data-scroll-target="#between-samples-normalization"><span class="header-section-number">8.2</span> Between samples normalization</a>
-  <ul class="collapse">
-  <li><a href="#boxplot-1" id="toc-boxplot-1" class="nav-link" data-scroll-target="#boxplot-1"><span class="header-section-number">8.2.1</span> Boxplot</a></li>
-  <li><a href="#rle-plot-1" id="toc-rle-plot-1" class="nav-link" data-scroll-target="#rle-plot-1"><span class="header-section-number">8.2.2</span> RLE plot</a></li>
-  <li><a href="#principal-component-analysis-1" id="toc-principal-component-analysis-1" class="nav-link" data-scroll-target="#principal-component-analysis-1"><span class="header-section-number">8.2.3</span> Principal component analysis</a></li>
-  </ul></li>
-  </ul></li>
-  <li><a href="#save-the-data-for-the-next-tutorial" id="toc-save-the-data-for-the-next-tutorial" class="nav-link" data-scroll-target="#save-the-data-for-the-next-tutorial"><span class="header-section-number">9</span> Save the data for the next tutorial</a></li>
-  </ul>
-</nav>
-    </div>
-<!-- main -->
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-1.html">Esercitazioni Genomica Computazionale</a></li><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-2.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Lab 2: RNA-seq pre-processing</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Lab 2: RNA-seq pre-processing</span></h1>
+<h1 class="title">Lab 2: RNA-seq pre-processing and normalization</h1>
 </div>
 
 
@@ -273,18 +128,18 @@ window.Quarto = {
 </header>
 
 
-<section id="introduction" class="level1" data-number="3">
-<h1 data-number="3"><span class="header-section-number">3</span> Introduction</h1>
-<p>In this tutorial we’ll explore the exploratory gene expression analysis using Bioconductor packages.</p>
-<section id="r-packages-installation" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="r-packages-installation"><span class="header-section-number">3.1</span> R packages installation</h2>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>In this tutorial we’ll explore the exploratory gene expression analysis and normalization using Bioconductor packages.</p>
+<section id="r-packages-installation" class="level3">
+<h3 class="anchored" data-anchor-id="r-packages-installation">R packages installation</h3>
 <p>We install R packages with the <em>install.packages</em> function.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"dplyr"</span>, <span class="st">"plyr"</span>, <span class="st">"corrplot"</span>, <span class="st">"ggfortify"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="bioconductor-installation" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="bioconductor-installation"><span class="header-section-number">3.2</span> Bioconductor installation</h2>
+<section id="bioconductor-installation" class="level3">
+<h3 class="anchored" data-anchor-id="bioconductor-installation">Bioconductor installation</h3>
 <p>Bioconductor is a free, open-source, and open-development software project. It is based primarily on the statistical programming language R and provides packages for the analysis and interpretation of high-throughput genomic data. For more information, see the <a href="https://www.bioconductor.org/">Bioconductor website</a>.</p>
 <p>Installing Bioconductor requires the <strong>BiocManager</strong> package.</p>
 <div class="cell">
@@ -293,17 +148,16 @@ window.Quarto = {
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Last version of Bioconductor</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># BiocManager::install(version = "3.23")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="bioconductor-packages-installation" class="level3" data-number="3.2.1">
-<h3 data-number="3.2.1" class="anchored" data-anchor-id="bioconductor-packages-installation"><span class="header-section-number">3.2.1</span> Bioconductor packages installation</h3>
+</section>
+<section id="bioconductor-packages-installation" class="level3">
+<h3 class="anchored" data-anchor-id="bioconductor-packages-installation">Bioconductor packages installation</h3>
 <p>To install core packages, necessary for all practical lectures, we use the <code>install()</code> function of <strong>BiocManager</strong> package.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># BiocManager::install(c("limma", "EDASeq", "edgeR"))</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-</section>
-</section>
-<section id="load-packages" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> Load packages</h1>
+<section id="load-packages" class="level3">
+<h3 class="anchored" data-anchor-id="load-packages">Load packages</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(limma)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(EDASeq)</span>
@@ -317,8 +171,9 @@ window.Quarto = {
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="summarizedexperiment" class="level1" data-number="5">
-<h1 data-number="5"><span class="header-section-number">5</span> SummarizedExperiment</h1>
+</section>
+<section id="summarizedexperiment" class="level2">
+<h2 class="anchored" data-anchor-id="summarizedexperiment">SummarizedExperiment</h2>
 <p>In this tutorial, we will use the lung adenocarcinoma (LUAD) dataset from The Cancer Genome Atlas (TCGA), a program that collects genomic mutations data from different types of tumors.</p>
 <p>We will load the dataset previously saved in an RDS file.</p>
 <div class="cell">
@@ -554,8 +409,8 @@ ENSG00000000938 OTTHUMG00000003516.3</code></pre>
 </div>
 <p>For a more detailed description see <a href="https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html">Bioconductor vignette</a>.</p>
 <p>For an understanding of the clinical variables regarding lung cancer staging, look at <a href="https://www.ieo.it/it/PER-I-PAZIENTI/Cure/Tumori-al-polmone/">IEO website</a>, while for the other variables, refer to the original work published in <a href="https://www.nature.com/articles/nature13385">Nature in 2014</a> in particular to Figure 5 of the work.</p>
-<section id="patients-selection" class="level2" data-number="5.1">
-<h2 data-number="5.1" class="anchored" data-anchor-id="patients-selection"><span class="header-section-number">5.1</span> Patients selection</h2>
+<section id="patients-selection" class="level3">
+<h3 class="anchored" data-anchor-id="patients-selection">Patients selection</h3>
 <p>For the next analysis we select the patients who have the smoking status different to a missing value.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(luad<span class="sc">$</span>paper_Smoking.Status)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -643,8 +498,8 @@ colData names(93): barcode patient ... paper_Ploidy.ABSOLUTE.calls
 </div>
 </section>
 </section>
-<section id="biological-question" class="level1" data-number="6">
-<h1 data-number="6"><span class="header-section-number">6</span> Biological question</h1>
+<section id="biological-question" class="level2">
+<h2 class="anchored" data-anchor-id="biological-question">Biological question</h2>
 <p>The aim of our analysis is to identify the transcriptional differences between the three LUAD subtypes: terminal respiratory unit (TRU), proximal-inflammatory (prox.-inflam), and proximal-proliferative (prox.-prolif). The subtype information is stored in the <em>paper_expression_subtype</em> variable.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(luad<span class="sc">$</span>paper_expression_subtype)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -655,15 +510,15 @@ colData names(93): barcode patient ... paper_Ploidy.ABSOLUTE.calls
 </div>
 </div>
 </section>
-<section id="exploratory-gene-expression-analysis" class="level1" data-number="7">
-<h1 data-number="7"><span class="header-section-number">7</span> Exploratory gene expression analysis</h1>
+<section id="exploratory-gene-expression-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-gene-expression-analysis">Exploratory gene expression analysis</h2>
 <p>Every RNA-seq study begins with exploratory data analysis, where the data are visualized using boxplots, MD/MA plots, RLE plots, and principal component analysis (PCA). These visualizations help answer key questions:</p>
 <ul>
 <li>Do different conditions or groups show distinct expression profiles?</li>
 <li>Are there any outlier samples?</li>
 </ul>
-<section id="boxplot" class="level2" data-number="7.1">
-<h2 data-number="7.1" class="anchored" data-anchor-id="boxplot"><span class="header-section-number">7.1</span> Boxplot</h2>
+<section id="boxplot" class="level3">
+<h3 class="anchored" data-anchor-id="boxplot">Boxplot</h3>
 <p>We can start by visualizing the data using a boxplot. Before plotting, it is often necessary to transform the count matrix using a <code>log(counts + 1)</code> transformation. This transformation is important because:</p>
 <ul>
 <li>RNA-seq samples often have different sequencing depths. Log transformation stabilizes the variance and makes the distributions more comparable across samples;</li>
@@ -750,8 +605,8 @@ FALSE
 </div>
 </div>
 </section>
-<section id="md-or-ma-charts" class="level2" data-number="7.2">
-<h2 data-number="7.2" class="anchored" data-anchor-id="md-or-ma-charts"><span class="header-section-number">7.2</span> MD or MA charts</h2>
+<section id="md-or-ma-charts" class="level3">
+<h3 class="anchored" data-anchor-id="md-or-ma-charts">MD or MA charts</h3>
 <p>In addition to the boxplot we can use the MA or MD charts.</p>
 <p>To visualize the MA plot we can use the <code>plotMA()</code> function of <strong>limma</strong> package.</p>
 <p>An MA plot visualizes differential expression results by plotting log2 fold change (M = log2(sample/virtual sample)) on the y-axis against mean normalized expression (A = average log counts) on the x-axis.</p>
@@ -786,8 +641,8 @@ FALSE
 </div>
 </div>
 </section>
-<section id="rle-plot" class="level2" data-number="7.3">
-<h2 data-number="7.3" class="anchored" data-anchor-id="rle-plot"><span class="header-section-number">7.3</span> RLE plot</h2>
+<section id="rle-plot" class="level3">
+<h3 class="anchored" data-anchor-id="rle-plot">RLE plot</h3>
 <p>Next, we visualize the data using an RLE (Relative Log Expression) plot before normalization, using the <code>plotRLE()</code> function from the <strong>EDASeq</strong> package.</p>
 <p>RLE plots are useful to check the differences between samples. Ideally, the median of boxplot should be centered around zero. Deviations indicate technical variation or differences in library size that may need normalization.</p>
 <div class="cell">
@@ -803,8 +658,8 @@ FALSE
 </div>
 <p>As expected the <strong>RLE</strong> graphs are very heterogeneous.</p>
 </section>
-<section id="principal-component-analysis" class="level2" data-number="7.4">
-<h2 data-number="7.4" class="anchored" data-anchor-id="principal-component-analysis"><span class="header-section-number">7.4</span> Principal Component Analysis</h2>
+<section id="principal-component-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="principal-component-analysis">Principal Component Analysis</h3>
 <p>Principal component analysis (PCA) is used to project a high-dimensional dataset (where the number of dimensions equals the number of genes or transcripts) onto few dimensions. In R, PCA can be computed using the built-in <code>prcomp()</code> function.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>pca <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(<span class="fu">t</span>(<span class="fu">log1p</span>(raw_count)))</span>
@@ -853,15 +708,15 @@ Cumulative Proportion   0.58091  0.58797</code></pre>
 </div>
 </section>
 </section>
-<section id="normalization" class="level1" data-number="8">
-<h1 data-number="8"><span class="header-section-number">8</span> Normalization</h1>
+<section id="normalization" class="level2">
+<h2 class="anchored" data-anchor-id="normalization">Normalization</h2>
 <p>Normalization of RNA-seq read counts is an essential procedure that corrects for non-biological variation of samples due to library preparation, sequencing read depth, gene length, mapping bias and other technical issues. Normalization is composed of two main steps: within-sample normalization and between-sample normalization.</p>
-<section id="within-samples-normalization" class="level2" data-number="8.1">
-<h2 data-number="8.1" class="anchored" data-anchor-id="within-samples-normalization"><span class="header-section-number">8.1</span> Within samples normalization</h2>
+<section id="within-samples-normalization" class="level3">
+<h3 class="anchored" data-anchor-id="within-samples-normalization">Within samples normalization</h3>
 <p>The within-samples normalization is necessary for GC-content bias. For a more detailed description see <a href="https://bioconductor.org/packages/devel/bioc/vignettes/EDASeq/inst/doc/EDASeq.html#retrieving-gene-length-and-gc-content">EDASeq vignette</a>.</p>
 </section>
-<section id="between-samples-normalization" class="level2" data-number="8.2">
-<h2 data-number="8.2" class="anchored" data-anchor-id="between-samples-normalization"><span class="header-section-number">8.2</span> Between samples normalization</h2>
+<section id="between-samples-normalization" class="level3">
+<h3 class="anchored" data-anchor-id="between-samples-normalization">Between samples normalization</h3>
 <p>Next, we compute the between normalization, using an R packages: <strong>edgeR</strong> package. We can utilize the <code>calcNormFactors</code> and <code>cpm</code> functions to estimate the normalizing factors for <code>RLE</code>, <code>TMM</code>, <code>upper quartile</code>, and <code>total count</code> normalizations.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>lbs <span class="ot">&lt;-</span> <span class="fu">calcNormFactors</span>(raw_count, <span class="at">method =</span> <span class="st">"RLE"</span>)</span>
@@ -875,8 +730,8 @@ Cumulative Proportion   0.58091  0.58797</code></pre>
 <span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>tc <span class="ot">&lt;-</span> <span class="fu">cpm</span>(raw_count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="boxplot-1" class="level3" data-number="8.2.1">
-<h3 data-number="8.2.1" class="anchored" data-anchor-id="boxplot-1"><span class="header-section-number">8.2.1</span> Boxplot</h3>
+<section id="boxplot-1" class="level4">
+<h4 class="anchored" data-anchor-id="boxplot-1">Boxplot</h4>
 <p>Expression matrix visualization after normalization using boxplot.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(<span class="fu">log2</span>(raw_count <span class="sc">+</span> <span class="dv">1</span>), <span class="at">outline =</span> <span class="cn">FALSE</span>,  <span class="at">las=</span><span class="dv">2</span>,</span>
@@ -926,8 +781,8 @@ Cumulative Proportion   0.58091  0.58797</code></pre>
 </div>
 </div>
 </section>
-<section id="rle-plot-1" class="level3" data-number="8.2.2">
-<h3 data-number="8.2.2" class="anchored" data-anchor-id="rle-plot-1"><span class="header-section-number">8.2.2</span> RLE plot</h3>
+<section id="rle-plot-1" class="level4">
+<h4 class="anchored" data-anchor-id="rle-plot-1">RLE plot</h4>
 <p>Expression matrix visualization after normalization using RLE plot.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>EDASeq<span class="sc">::</span><span class="fu">plotRLE</span>(raw_count, <span class="at">outline =</span> <span class="cn">FALSE</span>,  <span class="at">las=</span><span class="dv">2</span>, <span class="at">col=</span>col,</span>
@@ -977,8 +832,8 @@ Cumulative Proportion   0.58091  0.58797</code></pre>
 </div>
 </div>
 </section>
-<section id="principal-component-analysis-1" class="level3" data-number="8.2.3">
-<h3 data-number="8.2.3" class="anchored" data-anchor-id="principal-component-analysis-1"><span class="header-section-number">8.2.3</span> Principal component analysis</h3>
+<section id="principal-component-analysis-1" class="level4">
+<h4 class="anchored" data-anchor-id="principal-component-analysis-1">Principal component analysis</h4>
 <p>PCA analysis in the context of normalization performance assessment is useful only if an <em>a priori</em> biological information on sample stratification is available. It is reasonable to select the normalization that better recognize the known stratification.</p>
 <p>Now let’s see the basic functions of R to make <em>PCA</em> and then we will use the data normalized with the <em>TMM</em> to explore the results. Finally we will use the <em>plotPCA</em> function to plot scores across all the normalizations.</p>
 <div class="cell">
@@ -1034,16 +889,15 @@ Cumulative Proportion  0.599440 0.607470</code></pre>
 </section>
 </section>
 </section>
-<section id="save-the-data-for-the-next-tutorial" class="level1" data-number="9">
-<h1 data-number="9"><span class="header-section-number">9</span> Save the data for the next tutorial</h1>
+<section id="save-the-data-for-the-next-tutorial" class="level2">
+<h2 class="anchored" data-anchor-id="save-the-data-for-the-next-tutorial">Save the data for the next tutorial</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(<span class="at">list =</span> <span class="fu">c</span>(<span class="st">"luad"</span>, <span class="st">"tmm"</span>, <span class="st">"rle"</span>, <span class="st">"tc"</span>, <span class="st">"raw_count"</span>), <span class="at">file =</span> <span class="st">"normalization.RData"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-
-
 </section>
 
-</main> <!-- /main -->
+</main>
+<!-- /main column -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
@@ -1444,15 +1298,6 @@ Cumulative Proportion  0.599440 0.607470</code></pre>
     }
   });
   </script>
-<nav class="page-navigation">
-  <div class="nav-page nav-page-previous">
-      <a href="../esercitazioni/hand-on-1.html" class="pagination-link" aria-label="Lab 1: Introduction to R and Bioconductor">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Lab 1: Introduction to R and Bioconductor</span></span>
-      </a>          
-  </div>
-  <div class="nav-page nav-page-next">
-  </div>
-</nav>
 </div> <!-- /content -->
 
 
