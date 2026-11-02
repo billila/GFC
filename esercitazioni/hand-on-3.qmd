@@ -1,24 +1,20 @@
 ---
-title: "Inference with edgeR and enrichment analysis"
-author:  ""
-output:
-  html_notebook:
-    theme: cerulean
-    toc: yes
-    toc_depth: 3
-    number_sections: true
-  pdf_document:
-    toc: yes
-    toc_depth: '3'
+title: "Lab 3: Inference with edgeR and enrichment analysis"
+execute:
+  echo: true
+  warning: false
+  message: false
+resources:
+  - data/*
 ---
 
 ```{r include = FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, fig.width=8, fig.height=6, fig.path = "fig/Inference-")
 ```
 
-# Introduction
+## Introduction
 
-After normalization we can proceed with the differential expression genes identification. Differentially expressed gene (DEG) identification is the process of finding genes whose expression levels differ significantly on average between biological conditions. The **edgeR** package will use to the identification.
+After normalization we can proceed with the differential expression genes identification and enrichment analysis. Differentially expressed gene (DEG) identification is the process of finding genes whose expression levels differ significantly on average between biological conditions. The **edgeR** package will use to the identification.
 
 ```{r, message=FALSE}
 library(dplyr)
@@ -29,8 +25,16 @@ library(edgeR)
 library(genefilter)
 library(ggplot2)
 library(ggrepel)
-library(pheatmap)
-library(cluster)
+library(DESeq2)
+library(clusterProfiler)
+library(pathview)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(ReactomePA)
+library(enrichplot)
+library(ggnewscale)
+library(ggupset)
+library(ggridges)
 ```
 
 We load the .RData object from the previous tutorial.
@@ -39,22 +43,18 @@ We load the .RData object from the previous tutorial.
 load("normalization.RData")
 ```
 
-```{r}
-# colnames <- colnames(tmm)
-# colnames(tmm) <- substr(colnames(tmm), 9, 12)
-```
-
 The biological question is to identify the transcriptional differences between the two LUAD subtypes: proximal-inflammatory (prox.-inflam) and proximal-proliferative (prox.-prolif). The subtype information is stored in the `paper_expression_subtype` variable.
 
 ```{r}
-table(luad_sel$paper_expression_subtype)
+table(luad$paper_expression_subtype)
 
 # Remove the third category
-luad_prox <- luad_sel[, luad_sel$paper_expression_subtype != "TRU"]
+luad_prox <- luad[, luad$paper_expression_subtype != "TRU"]
+levels(luad_prox$paper_expression_subtype)
 luad_prox$paper_expression_subtype <- as.character(luad_prox$paper_expression_subtype)
 ```
 
-# Exploring the mean-variance relationship
+## Exploring the mean-variance relationship
 
 First we explore the *mean-variance* relationship on our dataset.
 
@@ -86,14 +86,7 @@ The black line represents the linear mean–variance relationship expected under
 
 The grey points represent the observed (raw) variances, while the dispersion estimates gene by gene are represented by the light blue dots.
 
-```{=html}
-<style>
-  div.blue{background-color:#e6f0ff; border-radius: 4px; padding: 15px;}
-  div.pink{background-color:#ffffcc; border-radius: 4px; padding: 15px;}
-</style>
-```
-
-# Identification of differentially expressed genes
+## Identification of differentially expressed genes
 
 The `glmFit()` function estimates the parameters of a generalized linear model (GLM). After normalization, the counts are effectively adjusted through scaling factors. To account for these normalized library sizes, an offset is included in the GLM: $log(E[Y|X]) = X\beta + O$, where $log(E[Y|X])$ is the link function for negative binomial distribution and $X\beta$ represents the linear predictor, and $O$ is the offset that incorporates the effective library sizes.
 
@@ -128,9 +121,9 @@ de <- tab[tab$FDR <0.05,]
 dim(de)
 ```
 
-# DEGs exploration
+### DEGs exploration
 
-## MD plot
+#### MD plot
 
 First, we visualize the MD plot, comparing the log-fold changes (**logFC**) with the average log counts per million (**logCPM**). Black points correspond to non-significant genes, while red and blue points indicate up- and down-regulated genes, respectively.
 
@@ -138,7 +131,7 @@ First, we visualize the MD plot, comparing the log-fold changes (**logFC**) with
 plotMD(res)
 ```
 
-## Volcano plot
+#### Volcano plot
 
 A volcano plot is a graphical representation of **logFC** vs **-log10(PValue)** with the possibility to highlight some genes of interest
 
@@ -156,7 +149,7 @@ ggplot(tab, aes(x = logFC, y = -log10(PValue), color = sign)) + geom_point() + t
   geom_text_repel(data = tab[1:20, ], aes(label = gene), size = 2.5, max.overlaps = 20) 
 ```
 
-## P-value distribution
+#### P-value distribution
 
 Last, we check the distribution of the *p-values*. In an unbiased situation we expect a peak on low values mixed with a uniform distribution. 
 
@@ -164,31 +157,11 @@ Last, we check the distribution of the *p-values*. In an unbiased situation we e
 hist(tab$PValue, main="p-values distribution")
 ```
 
-# Enrichment 
-
-```{r message=FALSE, warning=FALSE}
-library(knitr)
-library(EDASeq)
-library(dplyr)
-library(plyr)
-library(edgeR)
-library(DESeq2)
-library(limma)
-library(clusterProfiler)
-library(pathview)
-library(AnnotationDbi)
-library(org.Hs.eg.db)
-library(ReactomePA)
-library(enrichplot)
-library(ggnewscale)
-library(ggupset)
-library(ggridges)
-```
+## Enrichment 
 
 We will use genes found to be significantly differential expressed between prox.prolif vs prox.inflam the variable **paper_expression_subtype** to perform gene set enrichment analyses. 
 
-
-# Gene Set Analysis with ORA Method 
+### Gene Set Analysis with ORA Method 
 Over-Representation Analysis (ORA) tests whether a gene set is statistically over-represented in your DEG list compared to what you would expect by chance, given the size of the universe. 
 
 To check if there are Gene Ontology categories or biological pathways enriched in our DEG list we will use the **ClusterProfiler** package and the functions *enrichKEGG* (for KEGG pathways), *enrichPathway* (for Reactome pathway) and *enrichGO* (for Gene Ontology categories). All these function implement the Fisher exact test.
@@ -221,7 +194,7 @@ length(sign.entrez)
 length(universo.entrez)
 ```
 
-## KEGG pathways
+#### KEGG pathways
 
 With the ID vectors that we have created previously we can estimate the enrichment scores on all the available KEGG pathways:
 
@@ -253,12 +226,12 @@ Let's give a look at the genes that belong to the pathway with ID **hsa05321**. 
 
 ```{r message=FALSE}
 pathview(gene.data = sign.entrez, pathway.id = "hsa05321", species = "hsa")
-knitr::include_graphics("hsa05321.pathview.png")
+knitr::include_graphics("images/hsa05321.pathview.png")
 ```
 
 Try to compute the pathway analysis using Reactome database (*enrichPathway* function) and Gene Ontology (*enrichGO* function; specify Biological Process (BP) as category). 
 
-## Reactome database
+#### Reactome database
 
 ```{r message=FALSE}
 kk <- enrichPathway(gene = sign.entrez,
@@ -280,7 +253,7 @@ emapplot(edo)
 upsetplot(edo, 5)
 ```
 
-## Gene Ontology categories
+#### Gene Ontology categories
 
 We run the same analyses using GO terms using the Biological Process (BP) the  Molecular function (MF) and the Cellular component (CC) categories:
 
@@ -302,12 +275,10 @@ barplot(ego)
 upsetplot(ego, 5)
 ```
 
-# GSEA (Gene Set Enrichment Analysis) method
+### GSEA (Gene Set Enrichment Analysis) method
 
 GSEA (Gene Set Enrichment Analysis) does not require a binary DEG/non-DEG threshold.
-Instead, it works on the full ranked gene list: all quantified genes are sorted by a continuous statistic (logFC), and the algorithm asks whether the members 
-of a given gene set tend to cluster at the top (up-regulated) or 
-bottom (down-regulated) of this ranking, beyond what is expected by chance. This makes it more sensitive to moderate changes across a pathway.
+Instead, it works on the full ranked gene list: all quantified genes are sorted by a continuous statistic (logFC), and the algorithm asks whether the members of a given gene set tend to cluster at the top (up-regulated) or bottom (down-regulated) of this ranking, beyond what is expected by chance. This makes it more sensitive to moderate changes across a pathway.
 
 
 ```{r}
@@ -323,7 +294,7 @@ sort_tt <- sort(tt, decreasing = TRUE)
 
 Below we will see the results for KEGG and GO only but with  **gsePathway** function we can obtain the results for Reactome pathways.
 
-## KEGG pathway
+#### KEGG pathway
 
 The function to perform the analysis is **gseKEGG**:
 
@@ -347,7 +318,7 @@ gseaplot(kk2, geneSetID = "hsa00053") #Gene set enriched in top-regulated genes
 
 The same analyzes can be performed on the Gene Ontology, here we will use only BP (biological processes) but you can perform the analyses using all the categories (MF and CC)
 
-## GO categories
+#### GO categories
 
 ```{r}
 kkGO <- gseGO(geneList = sort_tt,
@@ -367,13 +338,13 @@ ridgeplot(kkGO, label_format = 50, showCategory = 20) # all shown gene sets are 
 dotplot(kkGO)
 ```
 
-
-```{r}
-#| eval: false
-#| include: true
+```{r, eval=FALSE}
 save("deg_enrichment.RData")
 ```
 
+### Excercises
 
+**Exercise 1**: Identify the differentially expressed genes between the TRU and prox.-inflam conditions.
 
+**Exercise 2**: Repeat the hands-on lessons using a new dataset on Diffuse Large B-Cell Lymphoma (DLBCL).
 
