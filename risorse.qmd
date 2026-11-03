@@ -1,0 +1,240 @@
+---
+toc: true
+toc-depth: 2
+---
+
+# Testi di riferimento {.unnumbered}
+
+Una selezione di libri e risorse per approfondire alcuni argomenti.
+Non sono letture obbligatorie: servono a chi vuole consolidare le basi di statistica e R o andare più a fondo su un argomento specifico.
+
+::: {.callout-tip}
+## Come leggere questa pagina
+
+Le risorse con il pulsante **Leggi online** sono consultabili gratuitamente sul web.
+Molti degli altri volumi sono disponibili nelle biblioteche di Ateneo.
+:::
+
+## Statistica e R
+
+### Modern Statistics for Modern Biology
+
+[Holmes S., Huber W. · Cambridge University Press, 2019]{.text-muted}
+
+Il riferimento più vicino al taglio del corso: statistica applicata a dati biologici ad alta dimensionalità, con tutto il codice in R/Bioconductor. Particolarmente utili i capitoli su test multipli, clustering, PCA e dati di conteggio.
+
+[Leggi online](https://www.huber.embl.de/msmb/){.btn .btn-outline-primary .btn-sm}
+
+### Learning Statistics with R
+
+[Navarro D. · licenza CC BY-SA]{.text-muted}
+
+Introduzione alla statistica e a R pensata per chi parte da zero: statistica descrittiva, probabilità, test di ipotesi, t-test, ANOVA, regressione lineare e un capitolo sulla statistica bayesiana.
+
+[Leggi online](https://learningstatisticswithr.com/){.btn .btn-outline-primary .btn-sm}
+
+### Data Analysis for the Life Sciences
+
+[Irizarry R. A., Love M. I. · Leanpub]{.text-muted}
+
+Introduzione graduale a inferenza, modelli lineari e analisi esplorativa, con esempi di genomica in R. Ottimo punto di partenza per chi ha poca statistica alle spalle.
+
+[Leggi online](http://genomicsclass.github.io/book/){.btn .btn-outline-primary .btn-sm}
+
+### Introduction to Data Science (2 volumi)
+
+[Irizarry R. A. · CRC Press]{.text-muted}
+
+Il primo volume affianca il Lab 1 (R da zero, `ggplot2`, manipolazione dei dati); il secondo copre probabilità, inferenza, regressione e machine learning.
+
+[Vol. 1 · Data wrangling e visualizzazione](https://rafalab.dfci.harvard.edu/dsbook-part-1/){.btn .btn-outline-primary .btn-sm}
+[Vol. 2 · Statistica e predizione](https://rafalab.dfci.harvard.edu/dsbook-part-2/){.btn .btn-outline-primary .btn-sm}
+
+### R for Data Science
+
+[Wickham H., Çetinkaya-Rundel M., Grolemund G. · O'Reilly, 2ª ed. 2023]{.text-muted}
+
+Il manuale di riferimento per il `tidyverse`: importare, trasformare e visualizzare dati in R.
+
+[Leggi online](https://r4ds.hadley.nz/){.btn .btn-outline-primary .btn-sm}
+
+### An Introduction to Statistical Learning with Applications in R
+
+[James G., Witten D., Hastie T., Tibshirani R. · Springer, 2ª ed. 2021]{.text-muted}
+
+Regressione, classificazione, riduzione della dimensionalità e clustering, spiegati con poca matematica e molti esempi in R.
+
+[Leggi online](https://www.statlearning.com/){.btn .btn-outline-primary .btn-sm}
+
+### The Analysis of Biological Data
+
+[Whitlock M. C., Schluter D. · Macmillan Learning, 3ª ed. 2020]{.text-muted}
+
+Manuale introduttivo di biostatistica pensato per studenti di biologia: disegno sperimentale, test di ipotesi, modelli lineari.
+
+## Modelli lineari generalizzati (GLM)
+
+I GLM estendono la regressione lineare a variabili risposta non gaussiane (conteggi, proporzioni, esiti binari). Sono alla base dell'analisi di espressione differenziale: `edgeR` e `DESeq2` stimano un GLM con distribuzione binomiale negativa per ogni gene.
+
+### Advanced Statistics and Data Analysis — cap. 6, Generalized Linear Models
+
+[Risso D. · Università di Padova]{.text-muted}
+
+Slide e laboratorio in R sulla regressione logistica con `glm()`: interpretazione dei coefficienti come log-odds e odds ratio, scelta della categoria di riferimento, covariate e predizioni.
+
+[Leggi online](https://drisso.github.io/ASDA/glm.html){.btn .btn-outline-primary .btn-sm}
+
+### An Introduction to GLMs in R
+
+[Davies B. F. R. · tutorial]{.text-muted}
+
+Tutorial introduttivo: scelta della distribuzione (gaussiana, Poisson, binomiale, Gamma, Beta), formulazione del modello, verifica delle assunzioni con residui e Q-Q plot, interpretazione tramite predizioni.
+
+[Leggi online](https://bedeffinianrowedavies.com/statisticstutorials/introductionglms){.btn .btn-outline-primary .btn-sm}
+
+### Generalized linear models
+
+[Coursera · articolo]{.text-muted}
+
+Breve articolo divulgativo per farsi un'idea dei concetti prima di affrontare i testi.
+
+[Leggi online](https://www.coursera.org/articles/generalized-linear-models){.btn .btn-outline-primary .btn-sm}
+
+### Modern Statistics for Modern Biology — cap. 8
+
+[Holmes S., Huber W.]{.text-muted}
+
+Il passaggio dai GLM all'analisi di dati di conteggio di RNA-seq.
+
+[Leggi online](https://www.huber.embl.de/msmb/){.btn .btn-outline-primary .btn-sm}
+
+## Corsi e materiali online
+
+### Statistics and R
+
+[Irizarry R. A., Love M. I. · HarvardX, edX]{.text-muted}
+
+Corso di circa 4 settimane, al proprio ritmo, gratuito in modalità *audit*. Affianca il libro *Data Analysis for the Life Sciences*.
+
+[Vai al corso](https://pll.harvard.edu/course/statistics-and-r){.btn .btn-outline-primary .btn-sm}
+
+### Data Skills for Reproducible Science
+
+[DeBruine L. M. · PsyTeachR]{.text-muted}
+
+Materiale di un corso di laurea magistrale: R e RStudio, `ggplot2`, `tidyr`/`dplyr`, funzioni e iterazione, simulazione e test di ipotesi, introduzione al modello lineare generale, R Markdown.
+
+[Leggi online](https://debruine.github.io/msc-data-skills/){.btn .btn-outline-primary .btn-sm}
+
+## Bioinformatica e genomica computazionale
+
+### Fondamenti di bioinformatica
+
+[Helmer Citterich M., Ferrè F., Pavesi G., Romualdi C., Pesole G. · Zanichelli, 2018]{.text-muted}
+
+Il testo di riferimento in italiano: banche dati, allineamento di sequenze, annotazione, analisi di espressione genica e reti biologiche.
+
+### Bioinformatics and Functional Genomics
+
+[Pevsner J. · Wiley-Blackwell, 3ª ed. 2015]{.text-muted}
+
+Copertura ampia e molto accessibile di quasi tutti gli argomenti del modulo, dalle banche dati NCBI all'analisi dell'espressione genica.
+
+### Introduction to Bioinformatics
+
+[Lesk A. M. · Oxford University Press, 5ª ed. 2019]{.text-muted}
+
+Introduzione sintetica e chiara, adatta come primo testo.
+
+### Bioinformatics Algorithms: An Active Learning Approach
+
+[Compeau P., Pevzner P. · Active Learning Publishers, 3ª ed. 2018]{.text-muted}
+
+Gli algoritmi alla base di allineamento, assemblaggio (grafi di de Bruijn) e mappatura delle reads, introdotti a partire da problemi biologici concreti.
+
+[Materiali e video](https://www.bioinformaticsalgorithms.org/){.btn .btn-outline-primary .btn-sm}
+
+### Biological Sequence Analysis
+
+[Durbin R., Eddy S. R., Krogh A., Mitchison G. · Cambridge University Press, 1998]{.text-muted}
+
+Il classico sull'allineamento di sequenze, le matrici di sostituzione e gli Hidden Markov Models. Più formale, per chi vuole capire i fondamenti probabilistici.
+
+### Genome-Scale Algorithm Design
+
+[Mäkinen V., Belazzougui D., Cunial F., Tomescu A. I. · Cambridge University Press, 2ª ed. 2023]{.text-muted}
+
+*Livello avanzato.* Strutture dati per la mappatura su genomi (suffix array, trasformata di Burrows–Wheeler, FM-index) e algoritmi di assemblaggio.
+
+## R/Bioconductor: libri e workflow online
+
+### Orchestrating Single-Cell Analysis with Bioconductor (OSCA)
+
+[Libro online della comunità Bioconductor]{.text-muted}
+
+Analisi di dati di single-cell RNA-seq con `SingleCellExperiment`: controllo qualità, normalizzazione, riduzione della dimensionalità, clustering e annotazione dei tipi cellulari.
+
+[Leggi online](https://bioconductor.org/books/release/OSCA/){.btn .btn-outline-primary .btn-sm}
+
+### Orchestrating Spatial Transcriptomics Analysis with Bioconductor (OSTA)
+
+[Libro online della comunità Bioconductor]{.text-muted}
+
+Analisi di dati di trascrittomica spaziale con `SpatialExperiment`, dalle piattaforme a spot (Visium) a quelle a risoluzione cellulare: controllo qualità, normalizzazione, domini spaziali e geni spazialmente variabili.
+
+[Leggi online](https://bioconductor.org/books/release/OSTA/){.btn .btn-outline-primary .btn-sm}
+
+### Orchestrating Microbiome Analysis (OMA)
+
+[Libro online della comunità Bioconductor]{.text-muted}
+
+Analisi di dati di microbioma con `TreeSummarizedExperiment` e il pacchetto `mia`: diversità alfa e beta, abbondanza differenziale, integrazione multi-omica.
+
+[Leggi online](https://bioconductor.org/books/release/OMA/){.btn .btn-outline-primary .btn-sm}
+
+### Bioconductor Books
+
+[Comunità Bioconductor]{.text-muted}
+
+Il catalogo completo dei libri online mantenuti dalla comunità Bioconductor.
+
+[Tutti i libri](https://bioconductor.org/books/release/){.btn .btn-outline-primary .btn-sm}
+
+### rnaseqGene
+
+[Workflow Bioconductor]{.text-muted}
+
+Workflow completo di analisi RNA-seq, dai conteggi all'espressione differenziale con `DESeq2`.
+
+[Leggi online](https://bioconductor.org/packages/release/workflows/html/rnaseqGene.html){.btn .btn-outline-primary .btn-sm}
+
+### RNAseq123
+
+[Workflow Bioconductor]{.text-muted}
+
+Espressione differenziale con `limma`, `Glimma` ed `edgeR`.
+
+[Leggi online](https://bioconductor.org/packages/release/workflows/html/RNAseq123.html){.btn .btn-outline-primary .btn-sm}
+
+### edgeR User's Guide
+
+[Vignetta del pacchetto edgeR · PDF]{.text-muted}
+
+Guida d'uso di `edgeR`, con molti casi di studio commentati (utile per il Lab 3).
+
+[Leggi online](https://bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Quale testo per quale argomento
+
+| Argomento | Dove approfondire |
+|---|---|
+| R da zero, statistica descrittiva | Navarro; Irizarry vol. 1; *R for Data Science*; *Data Skills for Reproducible Science* |
+| Inferenza, test di ipotesi, test multipli | Holmes & Huber; Navarro; Irizarry & Love (e corso *Statistics and R*); Whitlock & Schluter |
+| Modelli lineari e GLM | ASDA cap. 6; tutorial di Davies; Holmes & Huber cap. 8; James et al. |
+| Banche dati biologiche | Fondamenti di bioinformatica; Pevsner |
+| Allineamento di sequenze | Fondamenti di bioinformatica; Durbin et al.; Compeau & Pevzner |
+| Mappatura e assemblaggio | Compeau & Pevzner; Mäkinen et al. |
+| RNA-seq ed espressione differenziale | Holmes & Huber; workflow *rnaseqGene* e *RNAseq123*; edgeR User's Guide |
+| Single-cell, trascrittomica spaziale, microbioma | OSCA; OSTA; OMA |
+| Pathway, enrichment e reti | Fondamenti di bioinformatica; Pevsner; Holmes & Huber |
+| PCA, clustering, machine learning | Holmes & Huber; James et al. |
