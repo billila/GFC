@@ -8,7 +8,7 @@ resources:
   - data/*
 ---
 
-```{r include = FALSE}
+```{r, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, fig.width=8, fig.height=6, fig.path = "fig/Inference-")
 ```
 
@@ -96,14 +96,14 @@ fit$offset[,1:20]
 ```
 
 Once the model parameters have been estimated, we can perform the differential expression test for each gene, using the `glmLRT()` function. By specifying `coef = 2` (prox.-proliferative vs prox.-inflammatory), the null hypothesis is $H0:\beta_2=0$, which tests whether the effect of this condition is significantly different from zero. Let's see the first ten differentially expressed genes sorted by log fold-change (*logFC*), using the `topTags()` function:
-
+  
 ```{r, message=FALSE}
 res <- glmLRT(fit, coef=2)
 topTags(res, sort.by="logFC")
 ```
 
 For each gene:
-
+  
 -   **logFC** measures how much the gene changes between the two conditions;
 -   **logCPM** is the average expression
 -   **LR** is the test statistic
@@ -117,8 +117,8 @@ tab <- topTags(res, n=Inf)
 tab <- tab$table
 head(tab)
 
-de <- tab[tab$FDR <0.05,]
-dim(de)
+deg <- tab[tab$FDR <0.05,]
+dim(deg)
 ```
 
 ### DEGs exploration
@@ -136,7 +136,7 @@ plotMD(res)
 A volcano plot is a graphical representation of **logFC** vs **-log10(PValue)** with the possibility to highlight some genes of interest
 
 ```{r, message=FALSE}
-names <- row.names(de)
+names <- rownames(deg)
 
 tab$sign <- NA
 tab$sign[tab$logFC < 0] <- "Down"
@@ -152,127 +152,112 @@ ggplot(tab, aes(x = logFC, y = -log10(PValue), color = sign)) + geom_point() + t
 #### P-value distribution
 
 Last, we check the distribution of the *p-values*. In an unbiased situation we expect a peak on low values mixed with a uniform distribution. 
-
 ```{r, message=FALSE}
 hist(tab$PValue, main="p-values distribution")
 ```
 
-## Enrichment 
+## Enrichment analysis
 
-We will use genes found to be significantly differential expressed between prox.prolif vs prox.inflam the variable **paper_expression_subtype** to perform gene set enrichment analyses. 
+We will use the differentially expressed genes (DEGs) between the prox.prolif and prox.inflam conditions to perform enrichment analysis, identifying the biological processes, cellular functions, and metabolic pathways associated with these genes.
 
-### Gene Set Analysis with ORA Method 
-Over-Representation Analysis (ORA) tests whether a gene set is statistically over-represented in your DEG list compared to what you would expect by chance, given the size of the universe. 
+### ORA Method 
 
-To check if there are Gene Ontology categories or biological pathways enriched in our DEG list we will use the **ClusterProfiler** package and the functions *enrichKEGG* (for KEGG pathways), *enrichPathway* (for Reactome pathway) and *enrichGO* (for Gene Ontology categories). All these function implement the Fisher exact test.
+Over-representation analysis (ORA) is a method used to identify which biological pathways or functions are more represented in a list of genes than expected by chance, given the size of the universe (i.e., background genes).
 
-First of all we need to create the ID list of i (the differentially expressed genes) and of j, the reference universe (all the quantified genes):
-```{r}
-top <- topTags(res, n = Inf)$table
-deg <- top[top$FDR <= 0.05,]
-dim(deg)
-```
+To determine whether specific Gene Ontology (GO) categories or biological pathways are enriched in our DEG list, we will use the *enrichKEGG* function from the **clusterProfiler** package to analyse KEGG pathways, the *enrichPathway* function from the **ReactomePA** package to analyse Reactome pathways, and the *enrichGO* function from the **clusterProfiler** package to analyse Gene Ontology categories.
+
+First, we need to store the reference universe in an object, i.e., all the quantified genes. Then, we need to convert the gene identifiers into Entrez IDs using the *mapIds* function. To do this, we need a genome-wide annotation package for humans that contains Entrez Gene identifiers: **org.Hs.eg.db**.
 
 ```{r, message=FALSE}
-universo <- row.names(top)
-sign <- row.names(deg)
+universe <- rownames(tab)
+sign <- rownames(deg)
 
-universo.entrez <- mapIds(org.Hs.eg.db, # genome wide annotation for Human that contains Entrez Gene identifiers
-                    keys = universo, #Column containing Ensembl gene ids
-                    column = "ENTREZID",
-                    keytype = "ENSEMBL")  
+universe_entrez <- mapIds(org.Hs.eg.db, keys = universe, column = "ENTREZID", 
+                          keytype = "ENSEMBL")  
+head(universe_entrez)
 
-sign.entrez <- mapIds(org.Hs.eg.db,
-                    keys = sign, #Column containing Ensembl gene ids
-                    column = "ENTREZID",
-                    keytype = "ENSEMBL")
-universo.entrez <- as.character(universo.entrez)
-sign.entrez <- as.character(sign.entrez)
-
-
-length(sign.entrez)
-length(universo.entrez)
+sign_entrez <- mapIds(org.Hs.eg.db, keys = sign, column = "ENTREZID",
+                      keytype = "ENSEMBL")
+head(sign_entrez)
 ```
 
 #### KEGG pathways
 
-With the ID vectors that we have created previously we can estimate the enrichment scores on all the available KEGG pathways:
+Using the Entrez ID vectors generated in the previous steps, we can calculate enrichment scores for all available KEGG pathways.
 
-```{r message=FALSE}
-kk <- enrichKEGG(gene = sign.entrez,
-                 universe = universo.entrez,
-                 organism = 'hsa',
-                 keyType = 'ncbi-geneid',
-                 pvalueCutoff = 0.05,
-                 pAdjustMethod = "BH")
-dim(kk)
-kk@result[1:10,]
+```{r, message=FALSE}
+# To avoid the timeout
+options(timeout = 300) 
 
+ora_kegg <- enrichKEGG(gene = sign_entrez, universe = universe_entrez, organism = "hsa",
+                 keyType = "ncbi-geneid", pvalueCutoff = 0.05, pAdjustMethod = "BH")
+dim(ora_kegg)
+ora_kegg@result[1:5,]
 ```
 
 ```{r}
-barplot(kk) #Quickly rank terms by the number of genes involved
-dotplot(kk) #Useful when you want to distinguish between a term that is significant but contains few of your genes vs. one where your DEGs dominate the pathway.
-cnetplot(kk) # Useful to see gene overlap between terms and identify multi-pathway genes
-heatplot(kk, showCategory = 10) #Reveals which genes are shared across multiple terms and which are unique to one pathway
+# Barplot of number of genes involved
+barplot(ora_kegg) 
+# Useful when you want to distinguish between a term that is significant but 
+# contains few of your genes vs. one where your DEGs dominate the pathway.
+dotplot(ora_kegg) 
+# Useful to see gene overlap between terms and identify multi-pathway genes
+cnetplot(ora_kegg) 
+# Reveals which genes are shared across multiple terms and which are unique to one pathway
+heatplot(ora_kegg, showCategory = 10) 
 
-edo <- pairwise_termsim(kk)
-emapplot(edo) #Enrichment Map, terms are nodes; edges connect terms that share genes
-obj <- upsetplot(edo, 8)
-obj #Use this to understand the unique vs. shared gene membership across enriched categories.
+# Similarity matrix
+mat <- pairwise_termsim(ora_kegg)
+# Enrichment Map, terms are nodes; edges connect terms that share genes
+emapplot(mat) 
+
+# Use this to understand the unique vs. shared gene membership across enriched categories.
+upsetplot(mat, 8)
 ```
 
 Let's give a look at the genes that belong to the pathway with ID **hsa05321**. We will use the **pathview** function from the *pathview* package:
-
+  
 ```{r message=FALSE}
-pathview(gene.data = sign.entrez, pathway.id = "hsa05321", species = "hsa")
+pathview(gene.data = sign_entrez, pathway.id = "hsa05321", species = "hsa")
 knitr::include_graphics("images/hsa05321.pathview.png")
 ```
 
-Try to compute the pathway analysis using Reactome database (*enrichPathway* function) and Gene Ontology (*enrichGO* function; specify Biological Process (BP) as category). 
-
-#### Reactome database
+#### Reactome pathways
 
 ```{r message=FALSE}
-kk <- enrichPathway(gene = sign.entrez,
-                 universe = universo.entrez,
-                 organism = 'human',
-                 pvalueCutoff = 0.05,
-                 pAdjustMethod = "BH")
-kk@result[1:10, 1:6]
+# To avoid the timeout
+options(timeout = 300) 
+ora_react <- enrichPathway(gene = sign_entrez, universe = universe_entrez,
+                    organism = "human", pvalueCutoff = 0.05, pAdjustMethod = "BH")
+ora_react@result[1:6, 1:6]
 ```
 
 ```{r}
-barplot(kk)
-dotplot(kk)
-cnetplot(kk)
-heatplot(kk, showCategory = 10)
+barplot(ora_react)
+dotplot(ora_react)
+cnetplot(ora_react)
+heatplot(ora_react, showCategory = 10)
 
-edo <- pairwise_termsim(kk)
-emapplot(edo)
-upsetplot(edo, 5)
+mat <- pairwise_termsim(ora_react)
+emapplot(mat)
+upsetplot(mat, 5)
 ```
 
 #### Gene Ontology categories
 
 We run the same analyses using GO terms using the Biological Process (BP) the  Molecular function (MF) and the Cellular component (CC) categories:
-
+  
 ```{r message=FALSE}
-ego <- enrichGO(gene = sign.entrez,
-              universe = universo.entrez,
-              OrgDb = 'org.Hs.eg.db',
-              keyType = "ENTREZID",
-              ont = "BP",
-              pvalueCutoff = 0.05,
-              pAdjustMethod = "BH",
-              readable = TRUE)
+ora_go <- enrichGO(gene = sign_entrez, universe = universe_entrez,
+                OrgDb = "org.Hs.eg.db", keyType = "ENTREZID", ont = "BP",
+                pvalueCutoff = 0.05, pAdjustMethod = "BH", readable = TRUE)
 
-dim(ego@result[1:10])
+dim(ora_go@result[1:10])
 ```
 
 ```{r}
-barplot(ego)
-upsetplot(ego, 5)
+barplot(ora_go)
+upsetplot(ora_go, 5)
 ```
 
 ### GSEA (Gene Set Enrichment Analysis) method
@@ -280,71 +265,66 @@ upsetplot(ego, 5)
 GSEA (Gene Set Enrichment Analysis) does not require a binary DEG/non-DEG threshold.
 Instead, it works on the full ranked gene list: all quantified genes are sorted by a continuous statistic (logFC), and the algorithm asks whether the members of a given gene set tend to cluster at the top (up-regulated) or bottom (down-regulated) of this ranking, beyond what is expected by chance. This makes it more sensitive to moderate changes across a pathway.
 
-
 ```{r}
-tt <- top$logFC
-names(tt) <- universo.entrez
+logfc <- tab$logFC
+names(logfc) <- universe_entrez
 
-table(duplicated(names(tt)))
-tt <- tt[!duplicated(names(tt))]
-table(duplicated(names(tt)))
+table(duplicated(names(logfc)))
+logfc <- logfc[!duplicated(names(logfc))]
+table(duplicated(names(logfc)))
 
-sort_tt <- sort(tt, decreasing = TRUE)
+sort_logfc <- sort(logfc, decreasing = TRUE)
 ```
 
-Below we will see the results for KEGG and GO only but with  **gsePathway** function we can obtain the results for Reactome pathways.
+Below we will see the results for KEGG and GO only but with  *gsePathway* function we can obtain the results for Reactome pathways.
 
 #### KEGG pathway
 
-The function to perform the analysis is **gseKEGG**:
+We will use the *gseKEGG* function of **clusterProfiler** package to perform the analysis
 
-```{r}
-kk2 <- gseKEGG(geneList = sort_tt,
-              organism = "hsa",
-              pvalueCutoff = 0.05)
+```{r, message=FALSE}
+gsea_kegg <- gseKEGG(geneList = sort_logfc, organism = "hsa", pvalueCutoff = 0.05)
 
-kk2@result[1:10, 1:7] # The key output is the Normalized Enrichment Score (NES)
+# The key output is the Normalized Enrichment Score (NES)
+gsea_kegg@result[1:10, 1:7] 
 ```
 
-The distribution of the statistics in the various gene sets:
-
+Visualize the distribution of the ranking statistics across the different gene sets.
+  
 ```{r}
-gseaplot(kk2, geneSetID = "hsa03040") #Gene set enriched in down-regulated genes
-ridgeplot(kk2, label_format = 50, showCategory = 20) #Shows the distribution of the ranking statistic (logFC) for genes belonging to each enriched gene set. Useful for interpreting the direction of enrichment in GSEA results.
-```
-```{r}
-gseaplot(kk2, geneSetID = "hsa00053") #Gene set enriched in top-regulated genes
-```
+# Gene set enriched in down-regulated genes
+gseaplot(gsea_kegg, geneSetID = "hsa03040")
 
-The same analyzes can be performed on the Gene Ontology, here we will use only BP (biological processes) but you can perform the analyses using all the categories (MF and CC)
+#Gene set enriched in top-regulated genes
+gseaplot(gsea_kegg, geneSetID = "hsa00053")
+
+#Shows the distribution of the ranking statistic (logFC) for genes belonging to each enriched gene set. 
+# Useful for interpreting the direction of enrichment in GSEA results.
+ridgeplot(gsea_kegg, label_format = 50, showCategory = 20) 
+```
 
 #### GO categories
 
 ```{r}
-kkGO <- gseGO(geneList = sort_tt,
-          ont = "BP",
-          OrgDb='org.Hs.eg.db',
-          keyType = "ENTREZID",
-          pAdjustMethod = "BH")
-
-kkGO@result[1:10, 1:6]
+gsea_go <- gseGO(geneList = sort_logfc, ont = "BP", OrgDb ='org.Hs.eg.db',
+                 keyType = "ENTREZID", pAdjustMethod = "BH")
+gsea_go@result[1:10, 1:6]
 ```
 
-Let's see the distribution of the statistics in the various gene sets:
-
+Visualize the distribution of the ranking statistics across the different gene sets.
+  
 ```{r}
-gseaplot(kkGO, geneSetID = "GO:0006334")
-ridgeplot(kkGO, label_format = 50, showCategory = 20) # all shown gene sets are significant well beyond the resolution of the test --> To rank and interpret results look at the NES instead of the p.adjust
-dotplot(kkGO)
+gseaplot(gsea_go, geneSetID = "GO:0006334")
+ridgeplot(gsea_go, label_format = 50, showCategory = 20) 
+dotplot(gsea_go)
 ```
 
 ```{r, eval=FALSE}
 save("deg_enrichment.RData")
 ```
 
-### Excercises
+## Excercises
 
 **Exercise 1**: Identify the differentially expressed genes between the TRU and prox.-inflam conditions.
 
 **Exercise 2**: Repeat the hands-on lessons using a new dataset on Diffuse Large B-Cell Lymphoma (DLBCL).
-
