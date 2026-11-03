@@ -29,6 +29,7 @@ book:
         - esercitazioni/hand-on-1.qmd
         - esercitazioni/hand-on-2.qmd
         - esercitazioni/hand-on-3.qmd
+        - risorse.qmd
 
 # bibliography: references.bib
 
