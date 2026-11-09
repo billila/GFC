@@ -1,0 +1,562 @@
+---
+title: "Lab 4: dai file FASTQ alla matrice delle conte (QuantSeq 3' mRNA-seq)"
+execute:
+  echo: true
+  warning: false
+  message: false
+resources:
+  - data/quantseq/**
+  - reports/quantseq/**
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, fig.path = "fig/quantseq-")
+```
+
+## Introduzione
+
+Durante le esercitazioni in laboratorio avete preparato librerie **QuantSeq 3' mRNA-seq FWD** (Lexogen) a partire dall'RNA totale estratto da **cellule C2C12** (mioblasti di topo). Le cellule sono linee stabili che sovra-esprimono un microRNA: poiché i miRNA reprimono la traduzione e riducono la stabilità dei loro mRNA bersaglio, ci aspettiamo che i target di ciascun miRNA siano **down-regolati** rispetto alle cellule di controllo.
+
+Le librerie sono state sequenziate su uno strumento Illumina. In questa esercitazione seguiamo, passo dopo passo, tutto quello che succede tra l'output del sequenziatore (**i file FASTQ**) e l'oggetto che useremo per l'analisi statistica (**la matrice delle conte**):
+
+```{mermaid}
+%%| echo: false
+flowchart LR
+  A[FASTQ<br/>R1 + R2] --> B[Controllo integrità<br/>md5sum]
+  B --> C[Controllo qualità<br/>FastQC + MultiQC]
+  C --> D[Trimming<br/>cutadapt]
+  D --> E[Controllo qualità<br/>dopo il trimming]
+  D --> F[Allineamento<br/>STAR]
+  F --> G[Conte per gene<br/>STAR GeneCounts]
+  G --> H[Matrice delle conte<br/>edgeR DGEList]
+  E --> I[MultiQC<br/>report finale]
+  F --> I
+```
+
+I passaggi da riga di comando (dal controllo dei file alle conte per gene) sono stati eseguiti sul cluster di calcolo del laboratorio: il codice è riportato qui perché possiate capirlo e riprodurlo, ma **non dovete eseguirlo**. L'ultima parte (la costruzione della matrice delle conte) si fa in R e la eseguirete voi.
+
+### I campioni
+
+| Campione | Condizione | Corsa di sequenziamento |
+|---|---|---|
+| D18, D19, D20 | sovra-espressione di **miRNA A** | corsa 046 |
+| D21, D22, D23 | sovra-espressione di **miRNA B** | corsa 046 |
+| R09, R10, R11 | cellule di **controllo** | corsa 024 |
+
+::: {.callout-warning}
+## Due corse di sequenziamento
+
+I campioni di controllo sono stati sequenziati in una **corsa diversa** (`UNIPD-024`) rispetto ai campioni con i miRNA (`UNIPD-046`). Tenetelo a mente: ne vedremo le conseguenze più volte durante l'esercitazione.
+:::
+
+## La libreria QuantSeq FWD
+
+Ricordiamo come viene costruita la libreria (vedi il protocollo dell'esercitazione e il [manuale Lexogen](https://www.lexogen.com/quantseq-3mrna-sequencing/)):
+
+1. **retrotrascrizione** con un primer **oligo(dT)** che porta una parte dell'adattatore Illumina della Read 2;
+2. rimozione dello stampo di RNA;
+3. **sintesi della seconda elica** con **random primer** che portano una parte dell'adattatore Illumina della Read 1;
+4. purificazione con biglie e **PCR**, che aggiunge gli indici (i5, i7) e le sequenze per la flow cell.
+
+Si genera **un solo frammento per trascritto**, vicino all'estremità 3' dell'mRNA. Di conseguenza:
+
+- la **Read 1** parte dal random primer e legge la sequenza dell'mRNA **verso la coda di poli(A)**, nello stesso orientamento dell'mRNA (*forward stranded*);
+- la **Read 2** parte dall'oligo(dT): legge prima un lungo tratto di **T** e solo dopo l'inserto. Per questo motivo Lexogen **sconsiglia il sequenziamento paired-end** per QuantSeq FWD.
+
+I nostri dati sono stati comunque sequenziati in paired-end, 2 × 151 bp. Queste sono le prime read del campione D18:
+
+```
+Read 1 (R1), 151 nt
+  TNGCCCCTCAGACTGTACCAATAAAGGCCCATTTGTACAT    <- mRNA, estremità 3' (40 nt)
+  AAAAAAAAAAAAAAAAAA                          <- coda di poli(A) (18 nt)
+  AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC...       <- adattatore Illumina + indice
+  ...GGGGGGGGGGGGGGGGGGG                      <- poli(G)
+
+Read 2 (R2), 151 nt
+  NTTTTTTTTTTTTTTTTT                          <- poli(T) (18 nt)
+  ATGTACAAATGGGCCTTTATTGGTACAGTCTGAGGGGCAA    <- mRNA, reverse complement (40 nt)
+  AGATCGGAAGAGCGTCGTGTAGGGAAAGAG...           <- adattatore Illumina
+  ...GGGGGGGGGGGGGG                           <- poli(G)
+```
+
+Ogni read è un'unica sequenza di 151 nt: qui la dividiamo nei suoi segmenti.
+
+Osservate bene: i 40 nt di mRNA in R2 sono il **reverse complement** dei 40 nt in R1, perché le due read provengono dalle due estremità dello stesso frammento. Poiché l'inserto (40 nt) è molto più corto della read (151 nt), entrambe le read attraversano tutto l'inserto e finiscono nell'adattatore e in una coda di **G**.
+
+::: {.callout-note}
+## Perché poli(G)?
+
+Gli strumenti Illumina più recenti (NovaSeq, NextSeq) usano una **chimica a due colori**: la base G corrisponde a "nessun segnale". Quando la polimerasi arriva alla fine del frammento non c'è più niente da leggere, e lo strumento chiama una serie di G con qualità alta.
+:::
+
+**Decisione**: per l'analisi usiamo **solo la Read 1**. La Read 2 non aggiunge informazione e la sua qualità è compromessa dal tratto di poli(T).
+
+::: {.callout-tip}
+## Domanda
+
+Il protocollo dice che **non** è necessario purificare l'RNA poliadenilato né rimuovere l'RNA ribosomiale. Perché? Quale passaggio della preparazione della libreria seleziona gli RNA messaggeri?
+:::
+
+## Ambiente di calcolo
+
+Tutti i programmi sono stati installati in ambienti **conda**:
+
+| Programma | Versione | Uso |
+|---|---|---|
+| [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) | 0.12.1 | controllo qualità delle read |
+| [MultiQC](https://seqera.io/multiqc/) | 1.32 | aggregazione dei report di qualità |
+| [cutadapt](https://cutadapt.readthedocs.io/) | 5.2 | rimozione di adattatori e poli(A) |
+| [STAR](https://github.com/alexdobin/STAR) | 2.7.10b | allineamento *splice-aware* e conta delle read per gene |
+
+I job sono stati lanciati sul cluster con lo scheduler **SLURM**. La cartella del progetto è organizzata così:
+
+```
+miRNA_C2C12/
+├── fastq/           # file FASTQ grezzi (R1 e R2) + checksum md5
+├── trimmed/         # R1 dopo il trimming + log di cutadapt
+├── star/            # una cartella per campione: BAM, log, ReadsPerGene.out.tab
+├── qc/
+│   ├── fastqc/          # FastQC sulle read grezze
+│   ├── fastqc_trimmed/  # FastQC sulle read dopo il trimming
+│   └── multiqc/         # report MultiQC
+├── counts/          # matrice delle conte
+├── scripts/         # script SLURM
+└── logs/            # log di SLURM
+```
+
+## Passo 0: controllo dell'integrità dei file
+
+Insieme a ogni file FASTQ la facility di sequenziamento fornisce un file `.md5` che contiene il suo **checksum**: una "impronta digitale" del file, calcolata a partire dal suo contenuto. Il primo passo, ogni volta che si ricevono o si copiano dei dati, è ricalcolare il checksum e confrontarlo con quello fornito: se coincidono, il file è arrivato integro.
+
+```bash
+cd /mnt/indraccolo/miRNA_C2C12/fastq
+cat *.md5 > all.md5
+md5sum -c all.md5      # ogni file deve risultare "OK"
+```
+
+Se anche un solo file risulta `FAILED`, va scaricato di nuovo prima di procedere con l'analisi.
+
+::: {.callout-tip}
+## Domanda
+
+È stato scaricato un file FASTQ di 700 MB e la sua dimensione è corretta. Perché questo non basta per essere sicuri che il file sia integro?
+:::
+
+## Passo 1: controllo qualità delle read grezze
+
+[FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) calcola per ogni file FASTQ una serie di metriche di qualità (moduli) e assegna a ciascuna un esito PASS, WARN o FAIL. [MultiQC](https://seqera.io/multiqc/) raccoglie i risultati di tutti i campioni in un unico report.
+
+```bash
+#!/bin/bash
+#SBATCH -J fastqc
+#SBATCH -c 18
+#SBATCH --mem=32G
+#SBATCH -t 04:00:00
+conda activate /mnt/spca/conda/fastqc
+
+BASE=/mnt/indraccolo/miRNA_C2C12
+fastqc -t 18 -o $BASE/qc/fastqc $BASE/fastq/*.fastq.gz
+multiqc $BASE/qc/fastqc -o $BASE/qc/multiqc -n multiqc_fastqc
+```
+
+📊 **[Report MultiQC: read grezze (R1 e R2)](reports/quantseq/multiqc/multiqc_fastqc.html)**
+
+```{r}
+library(knitr)
+qc <- read.csv("data/quantseq/preprocessing_summary.csv")
+
+kable(qc[, c("id", "condition", "run", "raw_reads", "raw_dup_pct", "raw_gc_pct")],
+      col.names = c("Campione", "Condizione", "Corsa", "Read (R1)", "% duplicati", "% GC"),
+      format.args = list(big.mark = "."))
+```
+
+::: {.callout-important}
+## Molti FAIL sono attesi
+
+FastQC è stato pensato per il sequenziamento del genoma intero, in cui le read sono frammenti casuali del genoma. Diversi moduli risultano FAIL in **tutti** i campioni QuantSeq, e questo è una conseguenza del tipo di libreria, non di un campione di cattiva qualità:
+
+- **Per base sequence content**: in R1 le prime ~12 basi sono sbilanciate a causa del random primer; in R2 le prime ~15 basi sono quasi al 100% T (oligo-dT);
+- **Adapter content**: fino al ~65% delle read R1 contiene poli(A) alla fine, perché l'inserto è più corto della read;
+- **Sequence duplication levels**: tutte le read di un gene partono dalla stessa estremità 3', quindi un gene molto espresso produce migliaia di read identiche;
+- **Overrepresented sequences** (solo R2): read fatte solo di T o solo di G.
+:::
+
+::: {.callout-tip}
+## Domanda
+
+Guardate la tabella *General Statistics* del report MultiQC. Senza leggere i nomi dei campioni, riuscite a capire quali campioni sono stati sequenziati insieme? Quali metriche ve lo permettono?
+:::
+
+## Passo 2: trimming con cutadapt
+
+Poiché l'inserto è spesso più corto di 151 bp, la Read 1 legge dentro la coda di poli(A), poi l'adattatore e infine il poli(G). Queste basi non appartengono al genoma e devono essere rimosse prima dell'allineamento:
+
+```bash
+cutadapt -j 8 \
+  -a "A{18}" -a AGATCGGAAGAGC \
+  --nextseq-trim=20 -m 20 \
+  -o trimmed/${S}_R1.trim.fastq.gz \
+  fastq/${S}_R1.fastq.gz > trimmed/${S}.cutadapt.log
+```
+
+| Opzione | Significato |
+|---|---|
+| `-a "A{18}"` | adattatore 3' formato da 18 A: rimuove la coda di poli(A) **e tutto quello che segue** (adattatore e poli(G)) |
+| `-a AGATCGGAAGAGC` | adattatore Illumina, per gli inserti senza coda di poli(A) |
+| `--nextseq-trim=20` | trimming di qualità dall'estremità 3', che tratta le code di G degli strumenti a due colori come bassa qualità |
+| `-m 20` | scarta le read più corte di 20 nt dopo il trimming |
+
+Lo script è stato lanciato come **job array** di SLURM: un unico script eseguito 9 volte, una per campione, con `$SLURM_ARRAY_TASK_ID` che va da 0 a 8:
+
+```bash
+#SBATCH --array=0-8
+SAMPLES=(UNIPD-046-D18 UNIPD-046-D19 UNIPD-046-D20 UNIPD-046-D21 UNIPD-046-D22 UNIPD-046-D23 UNIPD-024-R09 UNIPD-024-R10 UNIPD-024-R11)
+S=${SAMPLES[$SLURM_ARRAY_TASK_ID]}
+```
+
+Ecco le prime read R1 di D18 prima e dopo il trimming:
+
+```
+prima: TNGCCCCTCAGACTGTACCAATAAAGGCCCATTTGTACATAAAAAAAAAAAAAAAAAAAGATCGGAAGAGCACACG...GGGGGGGG  (151 nt)
+dopo:  TNGCCCCTCAGACTGTACCAATAAAGGCCCATTTGTACAT                                                 (40 nt)
+
+prima: TNATCGCCTGGAGAAATGACCGCCTTTCTTACAACCAAAACAGTCCC...AGCTGAAGAATCAAAAAAA                     (151 nt)
+dopo:  TNATCGCCTGGAGAAATGACCGCCTTTCTTACAACCAAAACAGTCCC...AGCTGAAGAATC                            (144 nt)
+```
+
+```{r}
+qc$pct_too_short <- round(100 * qc$too_short / qc$raw_reads, 2)
+
+kable(qc[, c("id", "raw_reads", "trimmed_reads", "pct_too_short",
+             "trim_bases_pct", "trim_mean_len")],
+      col.names = c("Campione", "Read prima", "Read dopo", "% scartate (< 20 nt)",
+                    "% basi rimosse", "Lunghezza media dopo (nt)"),
+      format.args = list(big.mark = "."))
+```
+
+È stato rimosso circa il **30% delle basi sequenziate**, ma solo il **2–3% delle read** è stato scartato.
+
+Dopo il trimming abbiamo rilanciato FastQC sulle R1 ripulite:
+
+📊 **[Report MultiQC: read dopo il trimming (R1)](reports/quantseq/multiqc/multiqc_fastqc_trimmed.html)**
+
+::: {.callout-tip}
+## Domanda
+
+Confrontate i moduli *Adapter content*, *Sequence length distribution* e *Per base sequence quality* prima e dopo il trimming. Cosa è cambiato? Perché la percentuale di read duplicate è leggermente **aumentata** dopo il trimming?
+:::
+
+## Passo 3: allineamento con STAR
+
+Le read vengono allineate al genoma di riferimento del topo (**GRCm39**) con [STAR](https://github.com/alexdobin/STAR), un allineatore **splice-aware**: anche se le read QuantSeq sono vicine all'estremità 3', alcune di esse attraversano una giunzione esone–esone.
+
+STAR ha bisogno di un **indice** del genoma, costruito una volta sola a partire dal FASTA del genoma e dall'annotazione dei geni (GTF). Abbiamo usato un indice già disponibile sul cluster, costruito con l'annotazione **Ensembl release 116**:
+
+```bash
+STAR --runMode genomeGenerate --runThreadN 16 \
+  --genomeDir mmusculus_v116_149 \
+  --genomeFastaFiles Mus_musculus.GRCm39.dna.primary_assembly.fa \
+  --sjdbGTFfile Mus_musculus.GRCm39.116.gtf \
+  --sjdbOverhang 149        # lunghezza delle read - 1
+```
+
+Allineamento, con i parametri consigliati da Lexogen per QuantSeq FWD:
+
+```bash
+STAR --runThreadN 8 \
+  --genomeDir $IDX \
+  --readFilesIn trimmed/${S}_R1.trim.fastq.gz \
+  --readFilesCommand zcat \
+  --outFilterType BySJout \
+  --outFilterMultimapNmax 20 \
+  --alignSJoverhangMin 8 \
+  --alignSJDBoverhangMin 1 \
+  --outFilterMismatchNmax 999 \
+  --outFilterMismatchNoverLmax 0.1 \
+  --alignIntronMin 20 \
+  --alignIntronMax 1000000 \
+  --outSAMattributes NH HI NM MD \
+  --outSAMtype BAM SortedByCoordinate \
+  --quantMode GeneCounts \
+  --outFileNamePrefix star/${S}/
+```
+
+| Opzione | Significato |
+|---|---|
+| `--readFilesIn` | **un solo** file (R1): STAR lavora in modalità single-end |
+| `--outFilterMultimapNmax 20` | le read che mappano su più di 20 loci sono considerate non mappate |
+| `--outFilterMismatchNoverLmax 0.1` | al massimo 1 mismatch ogni 10 basi allineate |
+| `--outSAMtype BAM SortedByCoordinate` | salva gli allineamenti in un file BAM ordinato per posizione genomica |
+| `--quantMode GeneCounts` | conta le read per gene durante l'allineamento |
+
+Le prime ~12 basi di R1 hanno più mismatch a causa del random primer. STAR le gestisce automaticamente con il **soft-clipping**: le estremità di una read che non corrispondono al genoma vengono escluse dall'allineamento.
+
+Per ogni campione STAR scrive un file `Log.final.out` con le statistiche dell'allineamento:
+
+```{r}
+qc$pct_unique  <- round(100 * qc$uniquely_mapped / qc$trimmed_reads, 1)
+qc$pct_multi   <- round(100 * qc$multimapped / qc$trimmed_reads, 1)
+qc$pct_toomany <- round(100 * qc$too_many_loci / qc$trimmed_reads, 1)
+qc$pct_unmap   <- round(100 * qc$unmapped / qc$trimmed_reads, 1)
+
+kable(qc[, c("id", "trimmed_reads", "uniquely_mapped", "pct_unique",
+             "pct_multi", "pct_toomany", "pct_unmap")],
+      col.names = c("Campione", "Read in input", "Mappate in modo univoco", "% univoche",
+                    "% multi-mappate", "% troppi loci", "% non mappate"),
+      format.args = list(big.mark = "."))
+```
+
+```{r star-barplot}
+library(ggplot2)
+library(tidyr)
+
+aln <- pivot_longer(qc[, c("id", "uniquely_mapped", "multimapped", "too_many_loci", "unmapped")],
+                    -id, names_to = "category", values_to = "reads")
+aln$category <- factor(aln$category,
+                       levels = c("unmapped", "too_many_loci", "multimapped", "uniquely_mapped"),
+                       labels = c("Non mappate", "Troppi loci", "Multi-mappate", "Univoche"))
+
+ggplot(aln, aes(x = id, y = reads / 1e6, fill = category)) +
+  geom_col() +
+  labs(x = NULL, y = "Read (milioni)", fill = NULL, title = "Allineamento con STAR") +
+  theme_classic()
+```
+
+Circa il **76% delle read mappa su un unico locus** in tutti i campioni, mentre il ~22% mappa su più loci. È più che in un RNA-seq classico: le read cadono nei 3' UTR, che sono ricchi di ripetizioni e sequenze a bassa complessità.
+
+::: {.callout-tip}
+## Domanda
+
+I campioni di controllo hanno più del doppio delle read rispetto ai campioni con i miRNA. La **percentuale** di read mappate è diversa tra le due corse di sequenziamento? Cosa vi dice questo sulla qualità delle due corse?
+:::
+
+## Passo 4: conta delle read per gene
+
+Con `--quantMode GeneCounts`, STAR conta le read **mappate in modo univoco** che si sovrappongono agli esoni di ciascun gene e scrive il file `ReadsPerGene.out.tab`. Le prime quattro righe sono un riepilogo, poi c'è una riga per gene con **tre colonne di conte**:
+
+| Colonna | Conte per una libreria… |
+|---|---|
+| 2 | **unstranded**: la read viene contata qualunque sia il filamento |
+| 3 | **forward stranded**: la read deve essere sullo stesso filamento del gene |
+| 4 | **reverse stranded**: la read deve essere sul filamento opposto |
+
+Quale colonna dobbiamo usare? Guardiamo le righe di riepilogo del campione D21:
+
+```
+N_unmapped        206240   206240   206240
+N_multimapping   1723416  1723416  1723416
+N_noFeature       333921   345497  5292953
+N_ambiguous       776981   142779     7542
+```
+
+- `N_noFeature`: read che non si sovrappongono a nessun gene;
+- `N_ambiguous`: read che si sovrappongono a più di un gene.
+
+Con la colonna 4 quasi tutte le read cadono fuori dai geni: la libreria non è reverse stranded. Le colonne 2 e 3 hanno un numero simile di `N_noFeature`, ma la colonna 3 ha **5 volte meno read ambigue**: quando due geni si sovrappongono su filamenti opposti, conoscere il filamento della read permette di assegnarla al gene giusto. È il vantaggio di una libreria **stranded**, ed è esattamente quello che ci aspettiamo da QuantSeq **FWD**: usiamo la **colonna 3**.
+
+```{r}
+cnt_summ <- read.csv("data/quantseq/star_counts_summary.csv")
+cnt_summ$sample <- sub("^UNIPD-0(24|46)-", "", cnt_summ$sample)
+cnt_summ$pct_assigned <- round(100 * cnt_summ$N_assigned /
+                                 (cnt_summ$N_assigned + cnt_summ$N_noFeature + cnt_summ$N_ambiguous), 1)
+kable(cnt_summ,
+      col.names = c("Campione", "Non mappate", "Multi-mappate", "Nessun gene", "Ambigue",
+                    "Assegnate a un gene", "% delle univoche assegnate"),
+      format.args = list(big.mark = "."))
+```
+
+Più del 90% delle read mappate in modo univoco viene assegnato a un gene.
+
+::: {.callout-note}
+## Perché non serve normalizzare per la lunghezza dei geni?
+
+In un esperimento RNA-seq classico un trascritto lungo produce più frammenti di uno corto, quindi per confrontare geni diversi le conte vanno corrette per la lunghezza (per esempio RPKM, TPM). In QuantSeq ogni trascritto produce **un solo frammento**, qualunque sia la sua lunghezza: le conte sono direttamente proporzionali al numero di molecole.
+:::
+
+## Passo 5: costruire la matrice delle conte in R
+
+Adesso tocca a voi. Per ogni campione abbiamo un file `ReadsPerGene.out.tab` (compresso con gzip) nella cartella `data/quantseq/star/`.
+
+```{r}
+files <- list.files("data/quantseq/star", pattern = "ReadsPerGene.out.tab.gz$",
+                    full.names = TRUE)
+names(files) <- sub(".ReadsPerGene.out.tab.gz", "", basename(files))
+basename(files)
+```
+
+Leggiamo un file per capirne la struttura:
+
+```{r}
+x <- read.delim(files[1], header = FALSE)
+head(x)
+dim(x)
+```
+
+Le prime 4 righe sono il riepilogo visto sopra: le saltiamo e teniamo gli identificativi dei geni (colonna 1) e le conte forward stranded (colonna 3). Ripetiamo l'operazione per ogni file con `sapply()`, che restituisce una matrice con una colonna per campione:
+
+```{r}
+read_counts <- function(f) {
+  x <- read.delim(f, header = FALSE, skip = 4)
+  setNames(x$V3, x$V1)
+}
+
+counts <- sapply(files, read_counts)
+dim(counts)
+head(counts)
+```
+
+Prima di andare avanti controlliamo che tutti i file contengano gli stessi geni nello stesso ordine, e che le somme per colonna corrispondano ai valori `N_assigned` della tabella precedente:
+
+```{r}
+gene_ids <- lapply(files, function(f) read.delim(f, header = FALSE, skip = 4)$V1)
+all(sapply(gene_ids, identical, gene_ids[[1]]))
+
+colSums(counts)
+```
+
+### Informazioni sui campioni
+
+Creiamo un `data.frame` con le informazioni sui campioni. Assegniamo la condizione **a partire dal nome del campione**, così il risultato non dipende dall'ordine dei file:
+
+```{r}
+id <- sub("^UNIPD-0(24|46)-", "", colnames(counts))
+condition_map <- c(D18 = "miR_A",  D19 = "miR_A",  D20 = "miR_A",
+                   D21 = "miR_B", D22 = "miR_B", D23 = "miR_B",
+                   R09 = "Ctrl",    R10 = "Ctrl",    R11 = "Ctrl")
+
+samples <- data.frame(
+  sample    = colnames(counts),
+  id        = id,
+  condition = factor(condition_map[id], levels = c("Ctrl", "miR_A", "miR_B")),
+  run       = factor(ifelse(grepl("^UNIPD-024", colnames(counts)), "run024", "run046")),
+  row.names = colnames(counts)
+)
+samples
+```
+
+### Annotazione dei geni
+
+Le righe della matrice sono **identificativi Ensembl** dei geni (`ENSMUSG...`). L'indice di STAR contiene il file `geneInfo.tab` con il simbolo e il biotipo di ciascun gene:
+
+```{r}
+genes <- read.delim("data/quantseq/geneInfo.tab.gz", header = FALSE, skip = 1,
+                    col.names = c("ensembl_id", "symbol", "biotype"))
+rownames(genes) <- genes$ensembl_id
+genes <- genes[rownames(counts), ]
+head(genes)
+head(sort(table(genes$biotype), decreasing = TRUE), 8)
+```
+
+### L'oggetto DGEList
+
+Come nelle esercitazioni precedenti usiamo **edgeR**. L'oggetto `DGEList` raccoglie in un unico oggetto la matrice delle conte, le informazioni sui campioni e l'annotazione dei geni:
+
+```{r}
+library(edgeR)
+
+dge <- DGEList(counts = counts, samples = samples, genes = genes)
+dge
+```
+
+```{r libsize}
+ggplot(dge$samples, aes(x = id, y = lib.size / 1e6, fill = run)) +
+  geom_col() +
+  labs(x = NULL, y = "Read assegnate (milioni)", fill = "Corsa",
+       title = "Dimensione delle librerie") +
+  theme_classic()
+```
+
+### Filtraggio dei geni poco espressi
+
+Dei ~78.000 geni annotati, la maggior parte non è espressa nelle cellule C2C12. La funzione `filterByExpr()` mantiene i geni con un numero sufficiente di conte in un numero minimo di campioni, tenendo conto dei gruppi sperimentali e della dimensione delle librerie:
+
+```{r}
+table(rowSums(dge$counts) == 0)
+
+keep <- filterByExpr(dge, group = dge$samples$condition)
+table(keep)
+
+dge <- dge[keep, , keep.lib.sizes = FALSE]
+dim(dge)
+head(sort(table(dge$genes$biotype), decreasing = TRUE), 5)
+```
+
+### Normalizzazione e prima esplorazione dei dati
+
+Calcoliamo i fattori di normalizzazione TMM e i valori di log-CPM, poi osserviamo la somiglianza tra i campioni con un grafico di **multidimensional scaling** (MDS):
+
+```{r}
+dge <- calcNormFactors(dge, method = "TMM")
+dge$samples[, c("condition", "run", "lib.size", "norm.factors")]
+
+logcpm <- cpm(dge, log = TRUE)
+```
+
+```{r mds, fig.width = 6, fig.height = 5}
+cols <- c(Ctrl = "grey40", miR_A = "#D55E00", miR_B = "#0072B2")
+plotMDS(logcpm, labels = dge$samples$id,
+        col = cols[as.character(dge$samples$condition)],
+        main = "Grafico MDS (log-CPM)")
+legend("topright", legend = names(cols), text.col = cols, bty = "n")
+```
+
+::: {.callout-warning}
+## Biologia o batch?
+
+La **condizione** (miRNA o controllo) e la **corsa di sequenziamento** si sovrappongono perfettamente: tutti i controlli vengono dalla corsa 024 e tutti i campioni con i miRNA dalla corsa 046. Se i controlli si separano dagli altri campioni lungo la prima dimensione, **non possiamo** dire se questo dipenda dai miRNA o dalla diversa corsa. Dal punto di vista statistico i due effetti sono **confusi** (*confounded*): nessun modello può separarli, perché la variabile `condition` (controllo o miRNA) e la variabile `run` contengono la stessa informazione.
+
+Il confronto tra **miRNA A e miRNA B** non ha questo problema, perché tutti e sei i campioni vengono dalla stessa corsa.
+:::
+
+::: {.callout-tip}
+## Domanda
+
+Osservate il grafico MDS. Quali campioni sono vicini tra loro? Le repliche di ciascun gruppo si somigliano? Lungo quale dimensione si separano i due miRNA? Come progettereste l'esperimento per evitare che condizione e corsa di sequenziamento siano confuse?
+:::
+
+### Salvataggio dei dati per la prossima esercitazione
+
+```{r}
+saveRDS(dge, "data/quantseq/dge_quantseq.rds")
+```
+
+## Esercitazione: commentare un report FastQC
+
+Ognuno di voi riceverà **un report FastQC**. Apritelo, leggete tutti i moduli e scrivete un breve commento (5–10 righe) rispondendo alle seguenti domande:
+
+1. Di quale campione si tratta? Quale condizione? È la Read 1 o la Read 2, grezza o dopo il trimming?
+2. Quante read contiene? Quanto sono lunghe?
+3. Quali moduli sono PASS, WARN, FAIL? Per ogni FAIL, si tratta di un problema reale o di una conseguenza del tipo di libreria QuantSeq?
+4. *Per base sequence quality*: come cambia la qualità lungo la read? Perché?
+5. *Per base sequence content*: cosa succede nelle prime basi? Cosa succede a metà e alla fine della read?
+6. *Adapter content* e *Overrepresented sequences*: quali sequenze sono presenti? Da dove vengono?
+7. *Sequence duplication levels*: quale percentuale di read resterebbe dopo aver rimosso i duplicati? Si tratta di un problema della PCR?
+8. Terreste questo campione per l'analisi? Perché?
+
+Poi confrontate il vostro report con quello di un compagno che ha **lo stesso campione** (R1 rispetto a R2, oppure grezzo rispetto a dopo il trimming).
+
+```{r, echo = FALSE}
+ids <- c("UNIPD-046-D18", "UNIPD-046-D19", "UNIPD-046-D20",
+         "UNIPD-046-D21", "UNIPD-046-D22", "UNIPD-046-D23",
+         "UNIPD-024-R09", "UNIPD-024-R10", "UNIPD-024-R11")
+link <- function(path, label) sprintf("[%s](%s)", label, path)
+
+reports <- data.frame(
+  Campione     = ids,
+  Condizione   = condition_map[sub("^UNIPD-0(24|46)-", "", ids)],
+  `R1 grezza`  = link(sprintf("reports/quantseq/fastqc_raw/%s_R1_fastqc.html", ids), "R1"),
+  `R2 grezza`  = link(sprintf("reports/quantseq/fastqc_raw/%s_R2_fastqc.html", ids), "R2"),
+  `R1 trimmed` = link(sprintf("reports/quantseq/fastqc_trimmed/%s_R1.trim_fastqc.html", ids), "R1 trimmed"),
+  check.names = FALSE, row.names = NULL
+)
+kable(reports)
+```
+
+📊 **[Report MultiQC: tutti i passaggi (FastQC, cutadapt, STAR)](reports/quantseq/multiqc/multiqc_all.html)**
+
+## Informazioni sulla sessione
+
+```{r}
+sessionInfo()
+```

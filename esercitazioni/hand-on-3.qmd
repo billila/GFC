@@ -22,6 +22,7 @@ library(plyr)
 library(EDASeq)
 library(limma)
 library(edgeR)
+# commeno
 library(genefilter)
 library(ggplot2)
 library(ggrepel)
@@ -52,6 +53,7 @@ table(luad$paper_expression_subtype)
 luad_prox <- luad[, luad$paper_expression_subtype != "TRU"]
 levels(luad_prox$paper_expression_subtype)
 luad_prox$paper_expression_subtype <- as.character(luad_prox$paper_expression_subtype)
+table(luad_prox$paper_expression_subtype)
 ```
 
 ## Exploring the mean-variance relationship
@@ -76,6 +78,9 @@ The effective library sizes used in downstream analyses are calculated as `lib.s
 ```{r, message=FALSE}
 dge <- calcNormFactors(dge, method="TMM")
 dge <- estimateDisp(dge, design)
+
+dge$samples
+
 
 plotMeanVar(dge, show.raw.vars = TRUE, show.ave.raw.vars = F, NBline = TRUE, show.tagwise.vars = TRUE)
 ```
@@ -328,3 +333,5 @@ save("deg_enrichment.RData")
 **Exercise 1**: Identify the differentially expressed genes between the TRU and prox.-inflam conditions.
 
 **Exercise 2**: Repeat the hands-on lessons using a new dataset on Diffuse Large B-Cell Lymphoma (DLBCL).
+
+Idea: selezionare i pazienti con prima diagnosi (rimuovere due campioni) e confrontiamo stage i-ii vs iii-iv.
