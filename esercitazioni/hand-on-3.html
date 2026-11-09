@@ -304,7 +304,13 @@ window.Quarto = {
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "prox.-inflam"  "prox.-prolif." "TRU"          </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>luad_prox<span class="sc">$</span>paper_expression_subtype <span class="ot">&lt;-</span> <span class="fu">as.character</span>(luad_prox<span class="sc">$</span>paper_expression_subtype)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>luad_prox<span class="sc">$</span>paper_expression_subtype <span class="ot">&lt;-</span> <span class="fu">as.character</span>(luad_prox<span class="sc">$</span>paper_expression_subtype)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(luad_prox<span class="sc">$</span>paper_expression_subtype)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ prox.-inflam prox.-prolif. 
+           83            60 </code></pre>
+</div>
 </div>
 </section>
 <section id="exploring-the-mean-variance-relationship" class="level2" data-number="3.2">
@@ -313,8 +319,8 @@ window.Quarto = {
 <p>In RNA-seq data the variance is typically larger than the mean, a phenomenon called overdispersion. The distribution for over-dispersed counts is the Negative Binomial distribution (NB), where <span class="math inline">\(Var(Y)=μ+ϕμ^2\)</span> (quadratic relationship between the mean and the variance).</p>
 <p>To estimate the dispersion we’ll use <strong>edgeR</strong> package.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span> paper_expression_subtype, <span class="at">data =</span> <span class="fu">colData</span>(luad_prox))</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(design)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span> paper_expression_subtype, <span class="at">data =</span> <span class="fu">colData</span>(luad_prox))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(design)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                     (Intercept) paper_expression_subtypeprox.-prolif.
 2665-01A-01R-0946-07           1                                     0
@@ -324,16 +330,15 @@ window.Quarto = {
 7155-01A-11R-2039-07           1                                     0
 4506-01A-01R-1206-07           1                                     1</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a DGEList object</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>dge <span class="ot">&lt;-</span> <span class="fu">DGEList</span>(<span class="fu">assay</span>(luad_prox, <span class="st">"raw_count"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a DGEList object</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>dge <span class="ot">&lt;-</span> <span class="fu">DGEList</span>(<span class="fu">assay</span>(luad_prox, <span class="st">"raw_count"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Then, scaling factors are computed using the <code>calcNormFactors()</code> function to convert the observed library sizes into normalized values.</p>
 <p>The effective library sizes used in downstream analyses are calculated as <code>lib.size * norm.factors</code>, where <code>lib.size</code> contains the original library sizes and <code>norm.factors</code> is the vector of scaling factors computed by this function. The effective library sizes are incorporated into the model that estimates dispersion. The function <code>plotMeanVar()</code> in edgeR is used to visualize the relationship between gene expression levels (mean) and variability (variance).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dge <span class="ot">&lt;-</span> <span class="fu">calcNormFactors</span>(dge, <span class="at">method=</span><span class="st">"TMM"</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>dge <span class="ot">&lt;-</span> <span class="fu">estimateDisp</span>(dge, design)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plotMeanVar</span>(dge, <span class="at">show.raw.vars =</span> <span class="cn">TRUE</span>, <span class="at">show.ave.raw.vars =</span> F, <span class="at">NBline =</span> <span class="cn">TRUE</span>, <span class="at">show.tagwise.vars =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dge <span class="ot">&lt;-</span> <span class="fu">calcNormFactors</span>(dge, <span class="at">method=</span><span class="st">"TMM"</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>dge <span class="ot">&lt;-</span> <span class="fu">estimateDisp</span>(dge, design)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plotMeanVar</span>(dge, <span class="at">show.raw.vars =</span> <span class="cn">TRUE</span>, <span class="at">show.ave.raw.vars =</span> F, <span class="at">NBline =</span> <span class="cn">TRUE</span>, <span class="at">show.tagwise.vars =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -350,8 +355,8 @@ window.Quarto = {
 <h2 data-number="3.3" class="anchored" data-anchor-id="identification-of-differentially-expressed-genes"><span class="header-section-number">3.3</span> Identification of differentially expressed genes</h2>
 <p>The <code>glmFit()</code> function estimates the parameters of a generalized linear model (GLM). After normalization, the counts are effectively adjusted through scaling factors. To account for these normalized library sizes, an offset is included in the GLM: <span class="math inline">\(log(E[Y|X]) = X\beta + O\)</span>, where <span class="math inline">\(log(E[Y|X])\)</span> is the link function for negative binomial distribution and <span class="math inline">\(X\beta\)</span> represents the linear predictor, and <span class="math inline">\(O\)</span> is the offset that incorporates the effective library sizes.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">glmFit</span>(dge, design)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>fit<span class="sc">$</span>offset[,<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">glmFit</span>(dge, design)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>fit<span class="sc">$</span>offset[,<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         [,1]     [,2]     [,3]     [,4]     [,5]     [,6]     [,7]     [,8]
 [1,] 17.88867 17.85052 16.76021 17.58436 17.46216 17.76843 18.07505 17.29918
@@ -371,8 +376,8 @@ attr(,"repeat.col")
 </div>
 <p>Once the model parameters have been estimated, we can perform the differential expression test for each gene, using the <code>glmLRT()</code> function. By specifying <code>coef = 2</code> (prox.-proliferative vs prox.-inflammatory), the null hypothesis is <span class="math inline">\(H0:\beta_2=0\)</span>, which tests whether the effect of this condition is significantly different from zero. Let’s see the first ten differentially expressed genes sorted by log fold-change (<em>logFC</em>), using the <code>topTags()</code> function:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">glmLRT</span>(fit, <span class="at">coef=</span><span class="dv">2</span>)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">topTags</span>(res, <span class="at">sort.by=</span><span class="st">"logFC"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">glmLRT</span>(fit, <span class="at">coef=</span><span class="dv">2</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">topTags</span>(res, <span class="at">sort.by=</span><span class="st">"logFC"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Coefficient:  paper_expression_subtypeprox.-prolif. 
                      logFC      logCPM        LR       PValue          FDR
@@ -398,9 +403,9 @@ ENSG00000233052   8.667308 -0.25601018  16.09351 6.029043e-05 4.384521e-04</code
 </ul>
 <p>Let’s visualize the number of differentially expressed genes using a threshold of <span class="math inline">\(FDR&lt;0.05\)</span>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>tab <span class="ot">&lt;-</span> <span class="fu">topTags</span>(res, <span class="at">n=</span><span class="cn">Inf</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>tab <span class="ot">&lt;-</span> tab<span class="sc">$</span>table</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(tab)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>tab <span class="ot">&lt;-</span> <span class="fu">topTags</span>(res, <span class="at">n=</span><span class="cn">Inf</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>tab <span class="ot">&lt;-</span> tab<span class="sc">$</span>table</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(tab)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                    logFC    logCPM       LR       PValue          FDR
 ENSG00000129437  8.500367  4.997332 224.5107 9.387069e-51 4.901458e-46
@@ -410,8 +415,8 @@ ENSG00000134193 10.740183  6.679873 176.2546 3.186028e-40 4.158961e-36
 ENSG00000115758  3.037723  8.882645 165.9550 5.658421e-38 5.909090e-34
 ENSG00000122966  2.538198  6.984572 158.9470 1.921886e-36 1.672521e-32</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>deg <span class="ot">&lt;-</span> tab[tab<span class="sc">$</span>FDR <span class="sc">&lt;</span><span class="fl">0.05</span>,]</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(deg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>deg <span class="ot">&lt;-</span> tab[tab<span class="sc">$</span>FDR <span class="sc">&lt;</span><span class="fl">0.05</span>,]</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(deg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 20009     5</code></pre>
 </div>
@@ -422,7 +427,7 @@ ENSG00000122966  2.538198  6.984572 158.9470 1.921886e-36 1.672521e-32</code></p
 <h4 data-number="3.3.1.1" class="anchored" data-anchor-id="md-plot"><span class="header-section-number">3.3.1.1</span> MD plot</h4>
 <p>First, we visualize the MD plot, comparing the log-fold changes (<strong>logFC</strong>) with the average log counts per million (<strong>logCPM</strong>). Black points correspond to non-significant genes, while red and blue points indicate up- and down-regulated genes, respectively.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotMD</span>(res)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotMD</span>(res)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -436,17 +441,17 @@ ENSG00000122966  2.538198  6.984572 158.9470 1.921886e-36 1.672521e-32</code></p
 <h4 data-number="3.3.1.2" class="anchored" data-anchor-id="volcano-plot"><span class="header-section-number">3.3.1.2</span> Volcano plot</h4>
 <p>A volcano plot is a graphical representation of <strong>logFC</strong> vs <strong>-log10(PValue)</strong> with the possibility to highlight some genes of interest</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>names <span class="ot">&lt;-</span> <span class="fu">rownames</span>(deg)</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>tab<span class="sc">$</span>sign <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>tab<span class="sc">$</span>sign[tab<span class="sc">$</span>logFC <span class="sc">&lt;</span> <span class="dv">0</span>] <span class="ot">&lt;-</span> <span class="st">"Down"</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>tab<span class="sc">$</span>sign[tab<span class="sc">$</span>logFC <span class="sc">&gt;</span> <span class="dv">0</span>] <span class="ot">&lt;-</span> <span class="st">"Up"</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>tab<span class="sc">$</span>sign[tab<span class="sc">$</span>FDR <span class="sc">&gt;=</span> <span class="fl">0.05</span>] <span class="ot">&lt;-</span> <span class="st">"NoSig"</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>tab<span class="sc">$</span>gene <span class="ot">&lt;-</span> <span class="fu">rownames</span>(tab)</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(tab, <span class="fu">aes</span>(<span class="at">x =</span> logFC, <span class="at">y =</span> <span class="sc">-</span><span class="fu">log10</span>(PValue), <span class="at">color =</span> sign)) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"Down"</span> <span class="ot">=</span> <span class="st">"blue"</span>, <span class="st">"Up"</span> <span class="ot">=</span> <span class="st">"red"</span>, <span class="st">"NoSig"</span> <span class="ot">=</span> <span class="st">"black"</span>)) <span class="sc">+</span></span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text_repel</span>(<span class="at">data =</span> tab[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>, ], <span class="fu">aes</span>(<span class="at">label =</span> gene), <span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">max.overlaps =</span> <span class="dv">20</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>names <span class="ot">&lt;-</span> <span class="fu">rownames</span>(deg)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>tab<span class="sc">$</span>sign <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>tab<span class="sc">$</span>sign[tab<span class="sc">$</span>logFC <span class="sc">&lt;</span> <span class="dv">0</span>] <span class="ot">&lt;-</span> <span class="st">"Down"</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>tab<span class="sc">$</span>sign[tab<span class="sc">$</span>logFC <span class="sc">&gt;</span> <span class="dv">0</span>] <span class="ot">&lt;-</span> <span class="st">"Up"</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>tab<span class="sc">$</span>sign[tab<span class="sc">$</span>FDR <span class="sc">&gt;=</span> <span class="fl">0.05</span>] <span class="ot">&lt;-</span> <span class="st">"NoSig"</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>tab<span class="sc">$</span>gene <span class="ot">&lt;-</span> <span class="fu">rownames</span>(tab)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(tab, <span class="fu">aes</span>(<span class="at">x =</span> logFC, <span class="at">y =</span> <span class="sc">-</span><span class="fu">log10</span>(PValue), <span class="at">color =</span> sign)) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"Down"</span> <span class="ot">=</span> <span class="st">"blue"</span>, <span class="st">"Up"</span> <span class="ot">=</span> <span class="st">"red"</span>, <span class="st">"NoSig"</span> <span class="ot">=</span> <span class="st">"black"</span>)) <span class="sc">+</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text_repel</span>(<span class="at">data =</span> tab[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>, ], <span class="fu">aes</span>(<span class="at">label =</span> gene), <span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">max.overlaps =</span> <span class="dv">20</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -460,7 +465,7 @@ ENSG00000122966  2.538198  6.984572 158.9470 1.921886e-36 1.672521e-32</code></p
 <h4 data-number="3.3.1.3" class="anchored" data-anchor-id="p-value-distribution"><span class="header-section-number">3.3.1.3</span> P-value distribution</h4>
 <p>Last, we check the distribution of the <em>p-values</em>. In an unbiased situation we expect a peak on low values mixed with a uniform distribution.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(tab<span class="sc">$</span>PValue, <span class="at">main=</span><span class="st">"p-values distribution"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(tab<span class="sc">$</span>PValue, <span class="at">main=</span><span class="st">"p-values distribution"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -481,21 +486,21 @@ ENSG00000122966  2.538198  6.984572 158.9470 1.921886e-36 1.672521e-32</code></p
 <p>To determine whether specific Gene Ontology (GO) categories or biological pathways are enriched in our DEG list, we will use the <em>enrichKEGG</em> function from the <strong>clusterProfiler</strong> package to analyse KEGG pathways, the <em>enrichPathway</em> function from the <strong>ReactomePA</strong> package to analyse Reactome pathways, and the <em>enrichGO</em> function from the <strong>clusterProfiler</strong> package to analyse Gene Ontology categories.</p>
 <p>First, we need to store the reference universe in an object, i.e., all the quantified genes. Then, we need to convert the gene identifiers into Entrez IDs using the <em>mapIds</em> function. To do this, we need a genome-wide annotation package for humans that contains Entrez Gene identifiers: <strong>org.Hs.eg.db</strong>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>universe <span class="ot">&lt;-</span> <span class="fu">rownames</span>(tab)</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>sign <span class="ot">&lt;-</span> <span class="fu">rownames</span>(deg)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>universe_entrez <span class="ot">&lt;-</span> <span class="fu">mapIds</span>(org.Hs.eg.db, <span class="at">keys =</span> universe, <span class="at">column =</span> <span class="st">"ENTREZID"</span>, </span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">keytype =</span> <span class="st">"ENSEMBL"</span>)  </span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(universe_entrez)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>universe <span class="ot">&lt;-</span> <span class="fu">rownames</span>(tab)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>sign <span class="ot">&lt;-</span> <span class="fu">rownames</span>(deg)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>universe_entrez <span class="ot">&lt;-</span> <span class="fu">mapIds</span>(org.Hs.eg.db, <span class="at">keys =</span> universe, <span class="at">column =</span> <span class="st">"ENTREZID"</span>, </span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">keytype =</span> <span class="st">"ENSEMBL"</span>)  </span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(universe_entrez)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>ENSG00000129437 ENSG00000132874 ENSG00000096088 ENSG00000134193 ENSG00000115758 
         "43847"          "8170"          "5225"         "83998"          "4953" 
 ENSG00000122966 
         "11113" </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>sign_entrez <span class="ot">&lt;-</span> <span class="fu">mapIds</span>(org.Hs.eg.db, <span class="at">keys =</span> sign, <span class="at">column =</span> <span class="st">"ENTREZID"</span>,</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>                      <span class="at">keytype =</span> <span class="st">"ENSEMBL"</span>)</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(sign_entrez)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>sign_entrez <span class="ot">&lt;-</span> <span class="fu">mapIds</span>(org.Hs.eg.db, <span class="at">keys =</span> sign, <span class="at">column =</span> <span class="st">"ENTREZID"</span>,</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>                      <span class="at">keytype =</span> <span class="st">"ENSEMBL"</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(sign_entrez)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>ENSG00000129437 ENSG00000132874 ENSG00000096088 ENSG00000134193 ENSG00000115758 
         "43847"          "8170"          "5225"         "83998"          "4953" 
@@ -507,16 +512,16 @@ ENSG00000122966
 <h4 data-number="3.4.1.1" class="anchored" data-anchor-id="kegg-pathways"><span class="header-section-number">3.4.1.1</span> KEGG pathways</h4>
 <p>Using the Entrez ID vectors generated in the previous steps, we can calculate enrichment scores for all available KEGG pathways.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># To avoid the timeout</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">300</span>) </span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>ora_kegg <span class="ot">&lt;-</span> <span class="fu">enrichKEGG</span>(<span class="at">gene =</span> sign_entrez, <span class="at">universe =</span> universe_entrez, <span class="at">organism =</span> <span class="st">"hsa"</span>,</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">keyType =</span> <span class="st">"ncbi-geneid"</span>, <span class="at">pvalueCutoff =</span> <span class="fl">0.05</span>, <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span>)</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(ora_kegg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># To avoid the timeout</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">300</span>) </span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>ora_kegg <span class="ot">&lt;-</span> <span class="fu">enrichKEGG</span>(<span class="at">gene =</span> sign_entrez, <span class="at">universe =</span> universe_entrez, <span class="at">organism =</span> <span class="st">"hsa"</span>,</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">keyType =</span> <span class="st">"ncbi-geneid"</span>, <span class="at">pvalueCutoff =</span> <span class="fl">0.05</span>, <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(ora_kegg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 34 18</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>ora_kegg<span class="sc">@</span>result[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>ora_kegg<span class="sc">@</span>result[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                   category                     subcategory       ID
 hsa05332     Human Diseases                  Immune disease hsa05332
@@ -525,23 +530,23 @@ hsa05150     Human Diseases   Infectious disease: bacterial hsa05150
 hsa04940     Human Diseases Endocrine and metabolic disease hsa04940
 hsa04640 Organismal Systems                   Immune system hsa04640
                              Description GeneRatio  BgRatio RichFactor
-hsa05332       Graft-versus-host disease   35/3601  38/8517  0.9210526
-hsa05322    Systemic lupus erythematosus   88/3601 132/8517  0.6666667
-hsa05150 Staphylococcus aureus infection   62/3601  86/8517  0.7209302
-hsa04940        Type I diabetes mellitus   34/3601  41/8517  0.8292683
-hsa04640      Hematopoietic cell lineage   64/3601  95/8517  0.6736842
+hsa05332       Graft-versus-host disease   35/3609  38/8538  0.9210526
+hsa05322    Systemic lupus erythematosus   88/3609 132/8538  0.6666667
+hsa05150 Staphylococcus aureus infection   62/3609  86/8538  0.7209302
+hsa04940        Type I diabetes mellitus   34/3609  41/8538  0.8292683
+hsa04640      Hematopoietic cell lineage   64/3609  95/8538  0.6736842
          FoldEnrichment oddsRatio   zScore       pvalue     p.adjust
-hsa05332       2.178452 16.073565 6.230957 1.303233e-10 4.600413e-08
-hsa05322       1.576784  2.773698 5.715737 1.083911e-08 1.913103e-06
-hsa05150       1.705127  3.570971 5.624715 1.802224e-08 2.120617e-06
-hsa04940       1.961366  6.684529 5.280907 1.018907e-07 8.991853e-06
-hsa04640       1.593382  2.851332 4.977508 6.179304e-07 4.080242e-05
+hsa05332       2.178982 16.080022 6.232414 1.293049e-10 4.577395e-08
+hsa05322       1.577168  2.774780 5.718226 1.069482e-08 1.892983e-06
+hsa05150       1.705542  3.572385 5.626771 1.783052e-08 2.104001e-06
+hsa04940       1.961843  6.687233 5.282386 1.011826e-07 8.954662e-06
+hsa04640       1.593770  2.852468 4.979644 6.117553e-07 4.058575e-05
                qvalue
-hsa05332 4.600413e-08
-hsa05322 1.913103e-06
-hsa05150 2.120617e-06
-hsa04940 8.991853e-06
-hsa04640 4.080242e-05
+hsa05332 4.577395e-08
+hsa05322 1.892983e-06
+hsa05150 2.104001e-06
+hsa04940 8.954662e-06
+hsa04640 4.058575e-05
                                                                                                                                                                                                                                                                                                                                                                                                                                                                 geneID
 hsa05332                                                                                                                                                                                                                                                                                   355/3802/941/3122/942/3812/3117/3109/3123/3120/3113/3115/3553/3127/3821/3111/3119/3552/3824/3108/940/3106/7124/3135/3811/3133/3804/3458/3112/5551/356/3134/115653/3107/3569
 hsa05322 731/727/8364/8358/8366/8360/8348/2212/941/8335/8331/2209/8340/3122/942/8352/3018/317772/8356/85235/8359/3117/3109/8350/3123/8338/8354/8367/8332/8329/3120/3113/8346/3115/8968/2214/958/732/8368/3127/653604/713/712/8342/714/3111/8969/8361/3119/717/8344/3108/3586/940/8970/8343/121504/7124/3020/715/6741/115482686/8363/440689/8362/8355/3458/721/3112/716/8357/87/158983/1991/6738/6632/126961/2903/3012/729/8345/720/114483833/6634/55506/8290/8339/3021
@@ -549,16 +554,16 @@ hsa05150                                                                        
 hsa04940                                                                                                                                                                                                                                                                                          355/5798/941/3122/942/3117/3109/3123/3120/3113/3115/1363/3553/3127/3329/3111/3119/3382/3552/3108/940/3106/3593/7124/3135/3133/3458/3112/5551/356/3134/4049/5799/3107
 hsa04640                                                                                                                                                   3815/3684/7066/3673/3690/2209/1435/945/3122/1436/3117/3109/3123/3120/3113/3115/929/3553/7850/3127/960/3678/3675/920/2815/1437/913/3111/3676/927/3119/909/3552/911/290/3108/1438/7124/951/3559/3574/3575/1378/1604/3567/2057/910/914/3581/1440/2993/3566/966/3112/925/915/912/924/952/3563/916/1441/3569/917
          Count SetSize DESize UniverseSize
-hsa05332    35      38   3601         8517
-hsa05322    88     132   3601         8517
-hsa05150    62      86   3601         8517
-hsa04940    34      41   3601         8517
-hsa04640    64      95   3601         8517</code></pre>
+hsa05332    35      38   3609         8538
+hsa05322    88     132   3609         8538
+hsa05150    62      86   3609         8538
+hsa04940    34      41   3609         8538
+hsa04640    64      95   3609         8538</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Barplot of number of genes involved</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(ora_kegg) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Barplot of number of genes involved</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(ora_kegg) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -566,9 +571,9 @@ hsa04640    64      95   3601         8517</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Useful when you want to distinguish between a term that is significant but </span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co"># contains few of your genes vs. one where your DEGs dominate the pathway.</span></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dotplot</span>(ora_kegg) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Useful when you want to distinguish between a term that is significant but </span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="co"># contains few of your genes vs. one where your DEGs dominate the pathway.</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dotplot</span>(ora_kegg) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -576,8 +581,8 @@ hsa04640    64      95   3601         8517</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Useful to see gene overlap between terms and identify multi-pathway genes</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cnetplot</span>(ora_kegg) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Useful to see gene overlap between terms and identify multi-pathway genes</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cnetplot</span>(ora_kegg) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -585,8 +590,8 @@ hsa04640    64      95   3601         8517</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reveals which genes are shared across multiple terms and which are unique to one pathway</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">heatplot</span>(ora_kegg, <span class="at">showCategory =</span> <span class="dv">10</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reveals which genes are shared across multiple terms and which are unique to one pathway</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">heatplot</span>(ora_kegg, <span class="at">showCategory =</span> <span class="dv">10</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -594,10 +599,10 @@ hsa04640    64      95   3601         8517</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Similarity matrix</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>mat <span class="ot">&lt;-</span> <span class="fu">pairwise_termsim</span>(ora_kegg)</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Enrichment Map, terms are nodes; edges connect terms that share genes</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="fu">emapplot</span>(mat) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Similarity matrix</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>mat <span class="ot">&lt;-</span> <span class="fu">pairwise_termsim</span>(ora_kegg)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Enrichment Map, terms are nodes; edges connect terms that share genes</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="fu">emapplot</span>(mat) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -605,8 +610,8 @@ hsa04640    64      95   3601         8517</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use this to understand the unique vs. shared gene membership across enriched categories.</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">upsetplot</span>(mat, <span class="dv">8</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use this to understand the unique vs. shared gene membership across enriched categories.</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">upsetplot</span>(mat, <span class="dv">8</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -617,8 +622,8 @@ hsa04640    64      95   3601         8517</code></pre>
 </div>
 <p>Let’s give a look at the genes that belong to the pathway with ID <strong>hsa05321</strong>. We will use the <strong>pathview</strong> function from the <em>pathview</em> package:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pathview</span>(<span class="at">gene.data =</span> sign_entrez, <span class="at">pathway.id =</span> <span class="st">"hsa05321"</span>, <span class="at">species =</span> <span class="st">"hsa"</span>)</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(<span class="st">"images/hsa05321.pathview.png"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pathview</span>(<span class="at">gene.data =</span> sign_entrez, <span class="at">pathway.id =</span> <span class="st">"hsa05321"</span>, <span class="at">species =</span> <span class="st">"hsa"</span>)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(<span class="st">"images/hsa05321.pathview.png"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -631,11 +636,11 @@ hsa04640    64      95   3601         8517</code></pre>
 <section id="reactome-pathways" class="level4" data-number="3.4.1.2">
 <h4 data-number="3.4.1.2" class="anchored" data-anchor-id="reactome-pathways"><span class="header-section-number">3.4.1.2</span> Reactome pathways</h4>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># To avoid the timeout</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">300</span>) </span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>ora_react <span class="ot">&lt;-</span> <span class="fu">enrichPathway</span>(<span class="at">gene =</span> sign_entrez, <span class="at">universe =</span> universe_entrez,</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">organism =</span> <span class="st">"human"</span>, <span class="at">pvalueCutoff =</span> <span class="fl">0.05</span>, <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span>)</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>ora_react<span class="sc">@</span>result[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># To avoid the timeout</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">300</span>) </span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>ora_react <span class="ot">&lt;-</span> <span class="fu">enrichPathway</span>(<span class="at">gene =</span> sign_entrez, <span class="at">universe =</span> universe_entrez,</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">organism =</span> <span class="st">"human"</span>, <span class="at">pvalueCutoff =</span> <span class="fl">0.05</span>, <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span>)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>ora_react<span class="sc">@</span>result[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                         ID
 R-HSA-198933   R-HSA-198933
@@ -661,7 +666,7 @@ R-HSA-1566948   33/4579  44/11027  0.7500000       1.806126</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(ora_react)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(ora_react)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -669,7 +674,7 @@ R-HSA-1566948   33/4579  44/11027  0.7500000       1.806126</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dotplot</span>(ora_react)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dotplot</span>(ora_react)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -677,7 +682,7 @@ R-HSA-1566948   33/4579  44/11027  0.7500000       1.806126</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cnetplot</span>(ora_react)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cnetplot</span>(ora_react)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -685,7 +690,7 @@ R-HSA-1566948   33/4579  44/11027  0.7500000       1.806126</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">heatplot</span>(ora_react, <span class="at">showCategory =</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">heatplot</span>(ora_react, <span class="at">showCategory =</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -693,8 +698,8 @@ R-HSA-1566948   33/4579  44/11027  0.7500000       1.806126</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>mat <span class="ot">&lt;-</span> <span class="fu">pairwise_termsim</span>(ora_react)</span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">emapplot</span>(mat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>mat <span class="ot">&lt;-</span> <span class="fu">pairwise_termsim</span>(ora_react)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">emapplot</span>(mat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -702,7 +707,7 @@ R-HSA-1566948   33/4579  44/11027  0.7500000       1.806126</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">upsetplot</span>(mat, <span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">upsetplot</span>(mat, <span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -716,17 +721,17 @@ R-HSA-1566948   33/4579  44/11027  0.7500000       1.806126</code></pre>
 <h4 data-number="3.4.1.3" class="anchored" data-anchor-id="gene-ontology-categories"><span class="header-section-number">3.4.1.3</span> Gene Ontology categories</h4>
 <p>We run the same analyses using GO terms using the Biological Process (BP) the Molecular function (MF) and the Cellular component (CC) categories:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>ora_go <span class="ot">&lt;-</span> <span class="fu">enrichGO</span>(<span class="at">gene =</span> sign_entrez, <span class="at">universe =</span> universe_entrez,</span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">OrgDb =</span> <span class="st">"org.Hs.eg.db"</span>, <span class="at">keyType =</span> <span class="st">"ENTREZID"</span>, <span class="at">ont =</span> <span class="st">"BP"</span>,</span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">pvalueCutoff =</span> <span class="fl">0.05</span>, <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span>, <span class="at">readable =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(ora_go<span class="sc">@</span>result[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>ora_go <span class="ot">&lt;-</span> <span class="fu">enrichGO</span>(<span class="at">gene =</span> sign_entrez, <span class="at">universe =</span> universe_entrez,</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">OrgDb =</span> <span class="st">"org.Hs.eg.db"</span>, <span class="at">keyType =</span> <span class="st">"ENTREZID"</span>, <span class="at">ont =</span> <span class="st">"BP"</span>,</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">pvalueCutoff =</span> <span class="fl">0.05</span>, <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span>, <span class="at">readable =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(ora_go<span class="sc">@</span>result[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 5805   10</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(ora_go)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(ora_go)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -734,7 +739,7 @@ R-HSA-1566948   33/4579  44/11027  0.7500000       1.806126</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">upsetplot</span>(ora_go, <span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">upsetplot</span>(ora_go, <span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -749,62 +754,62 @@ R-HSA-1566948   33/4579  44/11027  0.7500000       1.806126</code></pre>
 <h3 data-number="3.4.2" class="anchored" data-anchor-id="gsea-gene-set-enrichment-analysis-method"><span class="header-section-number">3.4.2</span> GSEA (Gene Set Enrichment Analysis) method</h3>
 <p>GSEA (Gene Set Enrichment Analysis) does not require a binary DEG/non-DEG threshold. Instead, it works on the full ranked gene list: all quantified genes are sorted by a continuous statistic (logFC), and the algorithm asks whether the members of a given gene set tend to cluster at the top (up-regulated) or bottom (down-regulated) of this ranking, beyond what is expected by chance. This makes it more sensitive to moderate changes across a pathway.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>logfc <span class="ot">&lt;-</span> tab<span class="sc">$</span>logFC</span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(logfc) <span class="ot">&lt;-</span> universe_entrez</span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">duplicated</span>(<span class="fu">names</span>(logfc)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>logfc <span class="ot">&lt;-</span> tab<span class="sc">$</span>logFC</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(logfc) <span class="ot">&lt;-</span> universe_entrez</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">duplicated</span>(<span class="fu">names</span>(logfc)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 FALSE  TRUE 
 32422 19793 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>logfc <span class="ot">&lt;-</span> logfc[<span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">names</span>(logfc))]</span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">duplicated</span>(<span class="fu">names</span>(logfc)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>logfc <span class="ot">&lt;-</span> logfc[<span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">names</span>(logfc))]</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">duplicated</span>(<span class="fu">names</span>(logfc)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 FALSE 
 32422 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>sort_logfc <span class="ot">&lt;-</span> <span class="fu">sort</span>(logfc, <span class="at">decreasing =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>sort_logfc <span class="ot">&lt;-</span> <span class="fu">sort</span>(logfc, <span class="at">decreasing =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Below we will see the results for KEGG and GO only but with <em>gsePathway</em> function we can obtain the results for Reactome pathways.</p>
 <section id="kegg-pathway" class="level4" data-number="3.4.2.1">
 <h4 data-number="3.4.2.1" class="anchored" data-anchor-id="kegg-pathway"><span class="header-section-number">3.4.2.1</span> KEGG pathway</h4>
 <p>We will use the <em>gseKEGG</em> function of <strong>clusterProfiler</strong> package to perform the analysis</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>gsea_kegg <span class="ot">&lt;-</span> <span class="fu">gseKEGG</span>(<span class="at">geneList =</span> sort_logfc, <span class="at">organism =</span> <span class="st">"hsa"</span>, <span class="at">pvalueCutoff =</span> <span class="fl">0.05</span>)</span>
-<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="co"># The key output is the Normalized Enrichment Score (NES)</span></span>
-<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>gsea_kegg<span class="sc">@</span>result[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>] </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>gsea_kegg <span class="ot">&lt;-</span> <span class="fu">gseKEGG</span>(<span class="at">geneList =</span> sort_logfc, <span class="at">organism =</span> <span class="st">"hsa"</span>, <span class="at">pvalueCutoff =</span> <span class="fl">0.05</span>)</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="co"># The key output is the Normalized Enrichment Score (NES)</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>gsea_kegg<span class="sc">@</span>result[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>] </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>               ID                                  Description setSize
 hsa00982 hsa00982            Drug metabolism - cytochrome P450      66
+hsa00040 hsa00040     Pentose and glucuronate interconversions      34
 hsa00053 hsa00053            Ascorbate and aldarate metabolism      28
 hsa00980 hsa00980 Metabolism of xenobiotics by cytochrome P450      72
 hsa04975 hsa04975                 Fat digestion and absorption      43
-hsa00040 hsa00040     Pentose and glucuronate interconversions      34
-hsa00860 hsa00860                         Porphyrin metabolism      43
-hsa00190 hsa00190                    Oxidative phosphorylation     135
-hsa00590 hsa00590                  Arachidonic acid metabolism      62
-hsa04950 hsa04950         Maturity onset diabetes of the young      26
 hsa00983 hsa00983              Drug metabolism - other enzymes      77
+hsa00860 hsa00860                         Porphyrin metabolism      43
+hsa04950 hsa04950         Maturity onset diabetes of the young      26
+hsa05204 hsa05204        Chemical carcinogenesis - DNA adducts      66
+hsa04081 hsa04081                            Hormone signaling     215
          enrichmentScore      NES       pvalue     p.adjust
-hsa00982       0.7202440 2.571269 1.000000e-10 1.043168e-08
-hsa00053       0.8184001 2.483856 5.309886e-08 1.425500e-06
-hsa00980       0.6790471 2.481879 1.195608e-10 1.043168e-08
-hsa04975       0.7282462 2.468522 2.347010e-08 8.191066e-07
-hsa00040       0.7940977 2.453943 6.920928e-09 3.019255e-07
-hsa00860       0.6943046 2.353471 3.495343e-07 8.132498e-06
-hsa00190       0.5520002 2.233724 9.456229e-10 5.500373e-08
-hsa00590       0.6185768 2.231331 3.814525e-07 8.320432e-06
-hsa04950       0.7655439 2.224730 3.339337e-06 3.759447e-05
-hsa00983       0.6083788 2.217490 3.067125e-08 9.731152e-07</code></pre>
+hsa00982       0.7202440 2.585143 1.000000e-10 1.160000e-08
+hsa00040       0.7940977 2.522702 7.277272e-09 3.165613e-07
+hsa00053       0.8184001 2.485231 9.115073e-09 3.524495e-07
+hsa00980       0.6790471 2.482907 3.017144e-10 2.099932e-08
+hsa04975       0.7282462 2.424895 6.078748e-08 1.627234e-06
+hsa00983       0.6083788 2.314977 4.962571e-08 1.439146e-06
+hsa00860       0.6943046 2.311877 6.702632e-07 1.227640e-05
+hsa04950       0.7655439 2.281325 5.325750e-06 5.791753e-05
+hsa05204       0.6169566 2.214418 7.831015e-07 1.346315e-05
+hsa04081       0.5090391 2.195185 1.000000e-10 1.160000e-08</code></pre>
 </div>
 </div>
 <p>Visualize the distribution of the ranking statistics across the different gene sets.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Gene set enriched in down-regulated genes</span></span>
-<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gseaplot</span>(gsea_kegg, <span class="at">geneSetID =</span> <span class="st">"hsa03040"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Gene set enriched in down-regulated genes</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gseaplot</span>(gsea_kegg, <span class="at">geneSetID =</span> <span class="st">"hsa03040"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -812,8 +817,8 @@ hsa00983       0.6083788 2.217490 3.067125e-08 9.731152e-07</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Gene set enriched in top-regulated genes</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gseaplot</span>(gsea_kegg, <span class="at">geneSetID =</span> <span class="st">"hsa00053"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Gene set enriched in top-regulated genes</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gseaplot</span>(gsea_kegg, <span class="at">geneSetID =</span> <span class="st">"hsa00053"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -821,9 +826,9 @@ hsa00983       0.6083788 2.217490 3.067125e-08 9.731152e-07</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Shows the distribution of the ranking statistic (logFC) for genes belonging to each enriched gene set. </span></span>
-<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Useful for interpreting the direction of enrichment in GSEA results.</span></span>
-<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ridgeplot</span>(gsea_kegg, <span class="at">label_format =</span> <span class="dv">50</span>, <span class="at">showCategory =</span> <span class="dv">20</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Shows the distribution of the ranking statistic (logFC) for genes belonging to each enriched gene set. </span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Useful for interpreting the direction of enrichment in GSEA results.</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ridgeplot</span>(gsea_kegg, <span class="at">label_format =</span> <span class="dv">50</span>, <span class="at">showCategory =</span> <span class="dv">20</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -836,37 +841,37 @@ hsa00983       0.6083788 2.217490 3.067125e-08 9.731152e-07</code></pre>
 <section id="go-categories" class="level4" data-number="3.4.2.2">
 <h4 data-number="3.4.2.2" class="anchored" data-anchor-id="go-categories"><span class="header-section-number">3.4.2.2</span> GO categories</h4>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>gsea_go <span class="ot">&lt;-</span> <span class="fu">gseGO</span>(<span class="at">geneList =</span> sort_logfc, <span class="at">ont =</span> <span class="st">"BP"</span>, <span class="at">OrgDb =</span><span class="st">'org.Hs.eg.db'</span>,</span>
-<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">keyType =</span> <span class="st">"ENTREZID"</span>, <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span>)</span>
-<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>gsea_go<span class="sc">@</span>result[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>gsea_go <span class="ot">&lt;-</span> <span class="fu">gseGO</span>(<span class="at">geneList =</span> sort_logfc, <span class="at">ont =</span> <span class="st">"BP"</span>, <span class="at">OrgDb =</span><span class="st">'org.Hs.eg.db'</span>,</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">keyType =</span> <span class="st">"ENTREZID"</span>, <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span>)</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>gsea_go<span class="sc">@</span>result[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                   ID                                      Description setSize
 GO:0007586 GO:0007586                                        digestion     120
 GO:0046887 GO:0046887         positive regulation of hormone secretion     137
 GO:0090277 GO:0090277 positive regulation of peptide hormone secretion     105
+GO:0030072 GO:0030072                        peptide hormone secretion     208
+GO:0022900 GO:0022900                         electron transport chain     120
 GO:0022600 GO:0022600                         digestive system process      90
-GO:0071384 GO:0071384     cellular response to corticosteroid stimulus      58
-GO:0030073 GO:0030073                                insulin secretion     169
-GO:0071385 GO:0071385     cellular response to glucocorticoid stimulus      49
-GO:0010669 GO:0010669                 epithelial structure maintenance      37
-GO:0006721 GO:0006721                      terpenoid metabolic process     111
 GO:0002790 GO:0002790                                peptide secretion     212
+GO:0046883 GO:0046883                  regulation of hormone secretion     234
+GO:0071385 GO:0071385     cellular response to glucocorticoid stimulus      49
+GO:0050892 GO:0050892                            intestinal absorption      34
            enrichmentScore      NES       pvalue
-GO:0007586       0.6378296 2.509944 1.000000e-10
-GO:0046887       0.5924269 2.427107 1.000000e-10
-GO:0090277       0.6066107 2.409914 1.193580e-10
-GO:0022600       0.6233988 2.407711 1.457147e-10
-GO:0071384       0.6513458 2.349092 2.542283e-07
-GO:0030073       0.5695748 2.345290 1.000000e-10
-GO:0071385       0.6620504 2.304762 4.061928e-07
-GO:0010669       0.7106542 2.286785 2.774854e-06
-GO:0006721       0.5748006 2.284614 6.844051e-10
-GO:0002790       0.5418583 2.278632 1.000000e-10</code></pre>
+GO:0007586       0.6378296 2.548071 1.000000e-10
+GO:0046887       0.5924269 2.358902 1.000000e-10
+GO:0090277       0.6066107 2.342126 2.305389e-10
+GO:0030072       0.5549235 2.329105 1.000000e-10
+GO:0022900       0.5786191 2.311530 1.000000e-10
+GO:0022600       0.6233988 2.308604 1.078491e-09
+GO:0002790       0.5418583 2.301348 1.000000e-10
+GO:0046883       0.5295584 2.295742 1.000000e-10
+GO:0071385       0.6620504 2.286153 6.839382e-07
+GO:0050892       0.7217127 2.284249 1.371777e-06</code></pre>
 </div>
 </div>
 <p>Visualize the distribution of the ranking statistics across the different gene sets.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gseaplot</span>(gsea_go, <span class="at">geneSetID =</span> <span class="st">"GO:0006334"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gseaplot</span>(gsea_go, <span class="at">geneSetID =</span> <span class="st">"GO:0006334"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -874,7 +879,7 @@ GO:0002790       0.5418583 2.278632 1.000000e-10</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ridgeplot</span>(gsea_go, <span class="at">label_format =</span> <span class="dv">50</span>, <span class="at">showCategory =</span> <span class="dv">20</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ridgeplot</span>(gsea_go, <span class="at">label_format =</span> <span class="dv">50</span>, <span class="at">showCategory =</span> <span class="dv">20</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -882,7 +887,7 @@ GO:0002790       0.5418583 2.278632 1.000000e-10</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dotplot</span>(gsea_go)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dotplot</span>(gsea_go)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -892,7 +897,7 @@ GO:0002790       0.5418583 2.278632 1.000000e-10</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(<span class="st">"deg_enrichment.RData"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(<span class="st">"deg_enrichment.RData"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 </section>
