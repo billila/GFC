@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>4&nbsp; Lab 4: dai file FASTQ alla matrice delle conte (QuantSeq 3’ mRNA-seq) – Genomica Funzionale e Computazionale</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../risorse.html" rel="next">
+<link href="../esercitazioni/hand-on-3.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-2698fb289d119bff91fb56cd97f48cf3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="../site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="../site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-1.html">Esercitazioni Genomica Computazionale</a></li><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-4.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Lab 4: dai file FASTQ alla matrice delle conte (QuantSeq 3’ mRNA-seq)</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header sidebar-header-stacked">
+      <a href="../index.html" class="sidebar-logo-link">
+      </a>
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Genomica Funzionale e Computazionale</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Genomica Funzionale e Computazionale</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Esercitazioni Genomica Computazionale</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../esercitazioni/hand-on-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Lab 1: Introduction to R and Bioconductor</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../esercitazioni/hand-on-2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Lab 2: RNA-seq pre-processing and normalization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../esercitazioni/hand-on-3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Lab 3: Inference with edgeR and enrichment analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../esercitazioni/hand-on-4.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Lab 4: dai file FASTQ alla matrice delle conte (QuantSeq 3’ mRNA-seq)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../risorse.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testi di riferimento</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduzione" id="toc-introduzione" class="nav-link active" data-scroll-target="#introduzione"><span class="header-section-number">4.1</span> Introduzione</a>
+  <ul class="collapse">
+  <li><a href="#i-campioni" id="toc-i-campioni" class="nav-link" data-scroll-target="#i-campioni"><span class="header-section-number">4.1.1</span> I campioni</a></li>
+  </ul></li>
+  <li><a href="#la-libreria-quantseq-fwd" id="toc-la-libreria-quantseq-fwd" class="nav-link" data-scroll-target="#la-libreria-quantseq-fwd"><span class="header-section-number">4.2</span> La libreria QuantSeq FWD</a></li>
+  <li><a href="#ambiente-di-calcolo" id="toc-ambiente-di-calcolo" class="nav-link" data-scroll-target="#ambiente-di-calcolo"><span class="header-section-number">4.3</span> Ambiente di calcolo</a></li>
+  <li><a href="#passo-0-controllo-dellintegrità-dei-file" id="toc-passo-0-controllo-dellintegrità-dei-file" class="nav-link" data-scroll-target="#passo-0-controllo-dellintegrità-dei-file"><span class="header-section-number">4.4</span> Passo 0: controllo dell’integrità dei file</a></li>
+  <li><a href="#passo-1-controllo-qualità-delle-read-grezze" id="toc-passo-1-controllo-qualità-delle-read-grezze" class="nav-link" data-scroll-target="#passo-1-controllo-qualità-delle-read-grezze"><span class="header-section-number">4.5</span> Passo 1: controllo qualità delle read grezze</a></li>
+  <li><a href="#passo-2-trimming-con-cutadapt" id="toc-passo-2-trimming-con-cutadapt" class="nav-link" data-scroll-target="#passo-2-trimming-con-cutadapt"><span class="header-section-number">4.6</span> Passo 2: trimming con cutadapt</a></li>
+  <li><a href="#passo-3-allineamento-con-star" id="toc-passo-3-allineamento-con-star" class="nav-link" data-scroll-target="#passo-3-allineamento-con-star"><span class="header-section-number">4.7</span> Passo 3: allineamento con STAR</a></li>
+  <li><a href="#passo-4-conta-delle-read-per-gene" id="toc-passo-4-conta-delle-read-per-gene" class="nav-link" data-scroll-target="#passo-4-conta-delle-read-per-gene"><span class="header-section-number">4.8</span> Passo 4: conta delle read per gene</a></li>
+  <li><a href="#passo-5-dalla-tabella-di-star-alla-matrice-delle-conte" id="toc-passo-5-dalla-tabella-di-star-alla-matrice-delle-conte" class="nav-link" data-scroll-target="#passo-5-dalla-tabella-di-star-alla-matrice-delle-conte"><span class="header-section-number">4.9</span> Passo 5: dalla tabella di STAR alla matrice delle conte</a>
+  <ul class="collapse">
+  <li><a href="#pacchetti-r" id="toc-pacchetti-r" class="nav-link" data-scroll-target="#pacchetti-r"><span class="header-section-number">4.9.1</span> Pacchetti R</a></li>
+  <li><a href="#lettura-dei-file" id="toc-lettura-dei-file" class="nav-link" data-scroll-target="#lettura-dei-file"><span class="header-section-number">4.9.2</span> Lettura dei file</a></li>
+  <li><a href="#informazioni-sui-campioni" id="toc-informazioni-sui-campioni" class="nav-link" data-scroll-target="#informazioni-sui-campioni"><span class="header-section-number">4.9.3</span> Informazioni sui campioni</a></li>
+  <li><a href="#annotazione-dei-geni" id="toc-annotazione-dei-geni" class="nav-link" data-scroll-target="#annotazione-dei-geni"><span class="header-section-number">4.9.4</span> Annotazione dei geni</a></li>
+  <li><a href="#loggetto-summarizedexperiment" id="toc-loggetto-summarizedexperiment" class="nav-link" data-scroll-target="#loggetto-summarizedexperiment"><span class="header-section-number">4.9.5</span> L’oggetto SummarizedExperiment</a></li>
+  </ul></li>
+  <li><a href="#esercizio-1-commentare-un-report-fastqc" id="toc-esercizio-1-commentare-un-report-fastqc" class="nav-link" data-scroll-target="#esercizio-1-commentare-un-report-fastqc"><span class="header-section-number">4.10</span> Esercizio 1: commentare un report FastQC</a></li>
+  <li><a href="#esercizio-2-analisi-dei-dati" id="toc-esercizio-2-analisi-dei-dati" class="nav-link" data-scroll-target="#esercizio-2-analisi-dei-dati"><span class="header-section-number">4.11</span> Esercizio 2: analisi dei dati</a>
+  <ul class="collapse">
+  <li><a href="#filtraggio" id="toc-filtraggio" class="nav-link" data-scroll-target="#filtraggio"><span class="header-section-number">4.11.1</span> Filtraggio</a></li>
+  <li><a href="#analisi-esplorativa" id="toc-analisi-esplorativa" class="nav-link" data-scroll-target="#analisi-esplorativa"><span class="header-section-number">4.11.2</span> Analisi esplorativa</a></li>
+  <li><a href="#normalizzazione" id="toc-normalizzazione" class="nav-link" data-scroll-target="#normalizzazione"><span class="header-section-number">4.11.3</span> Normalizzazione</a></li>
+  <li><a href="#analisi-differenziale-con-edger" id="toc-analisi-differenziale-con-edger" class="nav-link" data-scroll-target="#analisi-differenziale-con-edger"><span class="header-section-number">4.11.4</span> Analisi differenziale con edgeR</a></li>
+  <li><a href="#analisi-di-arricchimento" id="toc-analisi-di-arricchimento" class="nav-link" data-scroll-target="#analisi-di-arricchimento"><span class="header-section-number">4.11.5</span> Analisi di arricchimento</a></li>
+  <li><a href="#domanda-finale" id="toc-domanda-finale" class="nav-link" data-scroll-target="#domanda-finale"><span class="header-section-number">4.11.6</span> Domanda finale</a></li>
+  </ul></li>
+  <li><a href="#informazioni-sulla-sessione" id="toc-informazioni-sulla-sessione" class="nav-link" data-scroll-target="#informazioni-sulla-sessione"><span class="header-section-number">4.12</span> Informazioni sulla sessione</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-1.html">Esercitazioni Genomica Computazionale</a></li><li class="breadcrumb-item"><a href="../esercitazioni/hand-on-4.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Lab 4: dai file FASTQ alla matrice delle conte (QuantSeq 3’ mRNA-seq)</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Lab 4: dai file FASTQ alla matrice delle conte (QuantSeq 3’ mRNA-seq)</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduzione" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="introduzione"><span class="header-section-number">4.1</span> Introduzione</h2>
+<p>Durante le esercitazioni in laboratorio avete preparato librerie <strong>QuantSeq 3’ mRNA-seq FWD</strong> (Lexogen) a partire dall’RNA totale estratto da <strong>cellule C2C12</strong> (mioblasti di topo). Le cellule sono linee stabili che sovra-esprimono un microRNA: poiché i miRNA reprimono la traduzione e riducono la stabilità dei loro mRNA bersaglio, ci aspettiamo che i target di ciascun miRNA siano <strong>down-regolati</strong> rispetto alle cellule di controllo.</p>
+<p>Le librerie sono state sequenziate su uno strumento Illumina. In questa esercitazione seguiamo, passo dopo passo, tutto quello che succede tra l’output del sequenziatore (<strong>i file FASTQ</strong>) e l’oggetto che useremo per l’analisi statistica (<strong>la matrice delle conte</strong>):</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+  A[FASTQ&lt;br/&gt;R1 + R2] --&gt; B[Controllo integrità&lt;br/&gt;md5sum]
+  B --&gt; C[Controllo qualità&lt;br/&gt;FastQC + MultiQC]
+  C --&gt; D[Trimming&lt;br/&gt;cutadapt]
+  D --&gt; E[Controllo qualità&lt;br/&gt;dopo il trimming]
+  D --&gt; F[Allineamento&lt;br/&gt;STAR]
+  F --&gt; G[Conte per gene&lt;br/&gt;STAR GeneCounts]
+  G --&gt; H[Matrice delle conte&lt;br/&gt;SummarizedExperiment]
+  E --&gt; I[MultiQC&lt;br/&gt;report finale]
+  F --&gt; I
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>I passaggi da riga di comando (dal controllo dei file alle conte per gene) sono stati eseguiti sul cluster di calcolo del laboratorio: il codice è riportato qui perché possiate capirlo e riprodurlo, ma <strong>non dovete eseguirlo</strong>. L’ultima parte (la costruzione della matrice delle conte) si fa in R e la eseguirete voi.</p>
+<section id="i-campioni" class="level3" data-number="4.1.1">
+<h3 data-number="4.1.1" class="anchored" data-anchor-id="i-campioni"><span class="header-section-number">4.1.1</span> I campioni</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Campione</th>
+<th>Condizione</th>
+<th>Corsa di sequenziamento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>D18, D19, D20</td>
+<td>sovra-espressione di <strong>miRNA A</strong></td>
+<td>corsa 046</td>
+</tr>
+<tr class="even">
+<td>D21, D22, D23</td>
+<td>sovra-espressione di <strong>miRNA B</strong></td>
+<td>corsa 046</td>
+</tr>
+<tr class="odd">
+<td>R09, R10, R11</td>
+<td>cellule di <strong>controllo</strong></td>
+<td>corsa 024</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Due corse di sequenziamento
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>I campioni di controllo sono stati sequenziati in una <strong>corsa diversa</strong> (<code>UNIPD-024</code>) rispetto ai campioni con i miRNA (<code>UNIPD-046</code>). Tenetelo a mente: ne vedremo le conseguenze più volte durante l’esercitazione.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="la-libreria-quantseq-fwd" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="la-libreria-quantseq-fwd"><span class="header-section-number">4.2</span> La libreria QuantSeq FWD</h2>
+<p>Ricordiamo come viene costruita la libreria (vedi il protocollo dell’esercitazione e il <a href="https://www.lexogen.com/quantseq-3mrna-sequencing/">manuale Lexogen</a>):</p>
+<ol type="1">
+<li><strong>retrotrascrizione</strong> con un primer <strong>oligo(dT)</strong> che porta una parte dell’adattatore Illumina della Read 2;</li>
+<li>rimozione dello stampo di RNA;</li>
+<li><strong>sintesi della seconda elica</strong> con <strong>random primer</strong> che portano una parte dell’adattatore Illumina della Read 1;</li>
+<li>purificazione con biglie e <strong>PCR</strong>, che aggiunge gli indici (i5, i7) e le sequenze per la flow cell.</li>
+</ol>
+<p>Si genera <strong>un solo frammento per trascritto</strong>, vicino all’estremità 3’ dell’mRNA. Di conseguenza:</p>
+<ul>
+<li>la <strong>Read 1</strong> parte dal random primer e legge la sequenza dell’mRNA <strong>verso la coda di poli(A)</strong>, nello stesso orientamento dell’mRNA (<em>forward stranded</em>);</li>
+<li>la <strong>Read 2</strong> parte dall’oligo(dT): legge prima un lungo tratto di <strong>T</strong> e solo dopo l’inserto. Per questo motivo Lexogen <strong>sconsiglia il sequenziamento paired-end</strong> per QuantSeq FWD.</li>
+</ul>
+<p>I nostri dati sono stati comunque sequenziati in paired-end, 2 × 151 bp. Queste sono le prime read del campione D18:</p>
+<pre><code>Read 1 (R1), 151 nt
+  TNGCCCCTCAGACTGTACCAATAAAGGCCCATTTGTACAT    &lt;- mRNA, estremità 3' (40 nt)
+  AAAAAAAAAAAAAAAAAA                          &lt;- coda di poli(A) (18 nt)
+  AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC...       &lt;- adattatore Illumina + indice
+  ...GGGGGGGGGGGGGGGGGGG                      &lt;- poli(G)
+
+Read 2 (R2), 151 nt
+  NTTTTTTTTTTTTTTTTT                          &lt;- poli(T) (18 nt)
+  ATGTACAAATGGGCCTTTATTGGTACAGTCTGAGGGGCAA    &lt;- mRNA, reverse complement (40 nt)
+  AGATCGGAAGAGCGTCGTGTAGGGAAAGAG...           &lt;- adattatore Illumina
+  ...GGGGGGGGGGGGGG                           &lt;- poli(G)</code></pre>
+<p>Ogni read è un’unica sequenza di 151 nt: qui la dividiamo nei suoi segmenti.</p>
+<p>Osservate bene: i 40 nt di mRNA in R2 sono il <strong>reverse complement</strong> dei 40 nt in R1, perché le due read provengono dalle due estremità dello stesso frammento. Poiché l’inserto (40 nt) è molto più corto della read (151 nt), entrambe le read attraversano tutto l’inserto e finiscono nell’adattatore e in una coda di <strong>G</strong>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Perché poli(G)?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Gli strumenti Illumina più recenti (NovaSeq, NextSeq) usano una <strong>chimica a due colori</strong>: la base G corrisponde a “nessun segnale”. Quando la polimerasi arriva alla fine del frammento non c’è più niente da leggere, e lo strumento chiama una serie di G con qualità alta.</p>
+</div>
+</div>
+<p><strong>Decisione</strong>: per l’analisi usiamo <strong>solo la Read 1</strong>. La Read 2 non aggiunge informazione e la sua qualità è compromessa dal tratto di poli(T).</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Domanda
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Il protocollo dice che <strong>non</strong> è necessario purificare l’RNA poliadenilato né rimuovere l’RNA ribosomiale. Perché? Quale passaggio della preparazione della libreria seleziona gli RNA messaggeri?</p>
+</div>
+</div>
+</section>
+<section id="ambiente-di-calcolo" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="ambiente-di-calcolo"><span class="header-section-number">4.3</span> Ambiente di calcolo</h2>
+<p>Tutti i programmi sono stati installati in ambienti <strong>conda</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Programma</th>
+<th>Versione</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/">FastQC</a></td>
+<td>0.12.1</td>
+<td>controllo qualità delle read</td>
+</tr>
+<tr class="even">
+<td><a href="https://seqera.io/multiqc/">MultiQC</a></td>
+<td>1.32</td>
+<td>aggregazione dei report di qualità</td>
+</tr>
+<tr class="odd">
+<td><a href="https://cutadapt.readthedocs.io/">cutadapt</a></td>
+<td>5.2</td>
+<td>rimozione di adattatori e poli(A)</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/alexdobin/STAR">STAR</a></td>
+<td>2.7.10b</td>
+<td>allineamento <em>splice-aware</em> e conta delle read per gene</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="passo-0-controllo-dellintegrità-dei-file" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="passo-0-controllo-dellintegrità-dei-file"><span class="header-section-number">4.4</span> Passo 0: controllo dell’integrità dei file</h2>
+<p>Insieme a ogni file FASTQ la facility di sequenziamento fornisce un file <code>.md5</code> che contiene il suo <strong>checksum</strong>: una “impronta digitale” del file, calcolata a partire dal suo contenuto. Il primo passo, ogni volta che si ricevono o si copiano dei dati, è ricalcolare il checksum e confrontarlo con quello fornito: se coincidono, il file è arrivato integro.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /miRNA_C2C12/fastq</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="pp">*</span>.md5 <span class="op">&gt;</span> all.md5</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">md5sum</span> <span class="at">-c</span> all.md5      <span class="co"># ogni file deve risultare "OK"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Se anche un solo file risulta <code>FAILED</code>, va scaricato di nuovo prima di procedere con l’analisi.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Domanda
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>È stato scaricato un file FASTQ di 700 MB e la sua dimensione è corretta. Perché questo non basta per essere sicuri che il file sia integro?</p>
+</div>
+</div>
+</section>
+<section id="passo-1-controllo-qualità-delle-read-grezze" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="passo-1-controllo-qualità-delle-read-grezze"><span class="header-section-number">4.5</span> Passo 1: controllo qualità delle read grezze</h2>
+<p><a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/">FastQC</a> calcola per ogni file FASTQ una serie di metriche di qualità (moduli) e assegna a ciascuna un esito PASS, WARN o FAIL. <a href="https://seqera.io/multiqc/">MultiQC</a> raccoglie i risultati di tutti i campioni in un unico report.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">fastqc</span> <span class="at">-t</span> 18 <span class="at">-o</span> /miRNA_C2C12/qc/fastqc /miRNA_C2C12/fastq/<span class="pp">*</span>.fastq.gz</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">multiqc</span> /miRNA_C2C12/qc/fastqc <span class="at">-o</span> /miRNA_C2C12/qc/multiqc <span class="at">-n</span> multiqc_fastqc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>📊 <strong><a href="reports/quantseq/multiqc/multiqc_fastqc.html">Report MultiQC: read grezze (R1 e R2)</a></strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>qc <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/quantseq/preprocessing_summary.csv"</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(qc[, <span class="fu">c</span>(<span class="st">"id"</span>, <span class="st">"condition"</span>, <span class="st">"run"</span>, <span class="st">"raw_reads"</span>, <span class="st">"raw_dup_pct"</span>, <span class="st">"raw_gc_pct"</span>)],</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Campione"</span>, <span class="st">"Condizione"</span>, <span class="st">"Corsa"</span>, <span class="st">"Read (R1)"</span>, <span class="st">"% duplicati"</span>, <span class="st">"% GC"</span>),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">format.args =</span> <span class="fu">list</span>(<span class="at">big.mark =</span> <span class="st">"."</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Campione</th>
+<th style="text-align: left;">Condizione</th>
+<th style="text-align: left;">Corsa</th>
+<th style="text-align: right;">Read (R1)</th>
+<th style="text-align: right;">% duplicati</th>
+<th style="text-align: right;">% GC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">R09</td>
+<td style="text-align: left;">Ctrl</td>
+<td style="text-align: left;">run024</td>
+<td style="text-align: right;">20.866.857</td>
+<td style="text-align: right;">71.1</td>
+<td style="text-align: right;">43</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">R10</td>
+<td style="text-align: left;">Ctrl</td>
+<td style="text-align: left;">run024</td>
+<td style="text-align: right;">22.061.619</td>
+<td style="text-align: right;">72.1</td>
+<td style="text-align: right;">42</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">R11</td>
+<td style="text-align: left;">Ctrl</td>
+<td style="text-align: left;">run024</td>
+<td style="text-align: right;">24.952.571</td>
+<td style="text-align: right;">74.9</td>
+<td style="text-align: right;">42</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D18</td>
+<td style="text-align: left;">miR_A</td>
+<td style="text-align: left;">run046</td>
+<td style="text-align: right;">8.738.077</td>
+<td style="text-align: right;">50.0</td>
+<td style="text-align: right;">41</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D19</td>
+<td style="text-align: left;">miR_A</td>
+<td style="text-align: left;">run046</td>
+<td style="text-align: right;">10.007.738</td>
+<td style="text-align: right;">51.5</td>
+<td style="text-align: right;">40</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D20</td>
+<td style="text-align: left;">miR_A</td>
+<td style="text-align: left;">run046</td>
+<td style="text-align: right;">9.121.516</td>
+<td style="text-align: right;">50.2</td>
+<td style="text-align: right;">41</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D21</td>
+<td style="text-align: left;">miR_B</td>
+<td style="text-align: left;">run046</td>
+<td style="text-align: right;">8.049.061</td>
+<td style="text-align: right;">47.2</td>
+<td style="text-align: right;">42</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D22</td>
+<td style="text-align: left;">miR_B</td>
+<td style="text-align: left;">run046</td>
+<td style="text-align: right;">8.707.707</td>
+<td style="text-align: right;">49.5</td>
+<td style="text-align: right;">42</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D23</td>
+<td style="text-align: left;">miR_B</td>
+<td style="text-align: left;">run046</td>
+<td style="text-align: right;">8.870.788</td>
+<td style="text-align: right;">50.1</td>
+<td style="text-align: right;">41</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Molti FAIL sono attesi
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>FastQC è stato pensato per il sequenziamento del genoma intero, in cui le read sono frammenti casuali del genoma. Diversi moduli risultano FAIL in <strong>tutti</strong> i campioni QuantSeq, e questo è una conseguenza del tipo di libreria, non di un campione di cattiva qualità:</p>
+<ul>
+<li><strong>Per base sequence content</strong>: in R1 le prime ~12 basi sono sbilanciate a causa del random primer; in R2 le prime ~15 basi sono quasi al 100% T (oligo-dT);</li>
+<li><strong>Adapter content</strong>: fino al ~65% delle read R1 contiene poli(A) alla fine, perché l’inserto è più corto della read;</li>
+<li><strong>Sequence duplication levels</strong>: tutte le read di un gene partono dalla stessa estremità 3’, quindi un gene molto espresso produce migliaia di read identiche;</li>
+<li><strong>Overrepresented sequences</strong> (solo R2): read fatte solo di T o solo di G.</li>
+</ul>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Domanda
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Guardate la tabella <em>General Statistics</em> del report MultiQC. Senza leggere i nomi dei campioni, riuscite a capire quali campioni sono stati sequenziati insieme? Quali metriche ve lo permettono?</p>
+</div>
+</div>
+</section>
+<section id="passo-2-trimming-con-cutadapt" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="passo-2-trimming-con-cutadapt"><span class="header-section-number">4.6</span> Passo 2: trimming con cutadapt</h2>
+<p>Poiché l’inserto è spesso più corto di 151 bp, la Read 1 legge dentro la coda di poli(A), poi l’adattatore e infine il poli(G). Queste basi non appartengono al genoma e devono essere rimosse prima dell’allineamento:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cutadapt</span> <span class="at">-j</span> 8 <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-a</span> <span class="st">"A{18}"</span> <span class="at">-a</span> AGATCGGAAGAGC <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--nextseq-trim</span><span class="op">=</span>20 <span class="at">-m</span> 20 <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> trimmed/<span class="va">${S}</span>_R1.trim.fastq.gz <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  fastq/<span class="va">${S}</span>_R1.fastq.gz <span class="op">&gt;</span> trimmed/<span class="va">${S}</span>.cutadapt.log</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Opzione</th>
+<th>Significato</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>-a "A{18}"</code></td>
+<td>adattatore 3’ formato da 18 A: rimuove la coda di poli(A) <strong>e tutto quello che segue</strong> (adattatore e poli(G))</td>
+</tr>
+<tr class="even">
+<td><code>-a AGATCGGAAGAGC</code></td>
+<td>adattatore Illumina, per gli inserti senza coda di poli(A)</td>
+</tr>
+<tr class="odd">
+<td><code>--nextseq-trim=20</code></td>
+<td>trimming di qualità dall’estremità 3’, che tratta le code di G degli strumenti a due colori come bassa qualità</td>
+</tr>
+<tr class="even">
+<td><code>-m 20</code></td>
+<td>scarta le read più corte di 20 nt dopo il trimming</td>
+</tr>
+</tbody>
+</table>
+<p>Ecco le prime read R1 di D18 prima e dopo il trimming:</p>
+<pre><code>prima: TNGCCCCTCAGACTGTACCAATAAAGGCCCATTTGTACATAAAAAAAAAAAAAAAAAAAGATCGGAAGAGCACACG...GGGGGGGG  (151 nt)
+dopo:  TNGCCCCTCAGACTGTACCAATAAAGGCCCATTTGTACAT                                                 (40 nt)
+
+prima: TNATCGCCTGGAGAAATGACCGCCTTTCTTACAACCAAAACAGTCCC...AGCTGAAGAATCAAAAAAA                     (151 nt)
+dopo:  TNATCGCCTGGAGAAATGACCGCCTTTCTTACAACCAAAACAGTCCC...AGCTGAAGAATC                            (144 nt)</code></pre>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>qc<span class="sc">$</span>pct_too_short <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> qc<span class="sc">$</span>too_short <span class="sc">/</span> qc<span class="sc">$</span>raw_reads, <span class="dv">2</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(qc[, <span class="fu">c</span>(<span class="st">"id"</span>, <span class="st">"raw_reads"</span>, <span class="st">"trimmed_reads"</span>, <span class="st">"pct_too_short"</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>             <span class="st">"trim_bases_pct"</span>, <span class="st">"trim_mean_len"</span>)],</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Campione"</span>, <span class="st">"Read prima"</span>, <span class="st">"Read dopo"</span>, <span class="st">"% scartate (&lt; 20 nt)"</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"% basi rimosse"</span>, <span class="st">"Lunghezza media dopo (nt)"</span>),</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">format.args =</span> <span class="fu">list</span>(<span class="at">big.mark =</span> <span class="st">"."</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 22%">
+<col style="width: 16%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Campione</th>
+<th style="text-align: right;">Read prima</th>
+<th style="text-align: right;">Read dopo</th>
+<th style="text-align: right;">% scartate (&lt; 20 nt)</th>
+<th style="text-align: right;">% basi rimosse</th>
+<th style="text-align: right;">Lunghezza media dopo (nt)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">R09</td>
+<td style="text-align: right;">20.866.857</td>
+<td style="text-align: right;">20.223.841</td>
+<td style="text-align: right;">3.08</td>
+<td style="text-align: right;">29.7</td>
+<td style="text-align: right;">109.5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">R10</td>
+<td style="text-align: right;">22.061.619</td>
+<td style="text-align: right;">21.340.934</td>
+<td style="text-align: right;">3.27</td>
+<td style="text-align: right;">30.9</td>
+<td style="text-align: right;">107.9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">R11</td>
+<td style="text-align: right;">24.952.571</td>
+<td style="text-align: right;">24.189.828</td>
+<td style="text-align: right;">3.06</td>
+<td style="text-align: right;">30.5</td>
+<td style="text-align: right;">108.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D18</td>
+<td style="text-align: right;">8.738.077</td>
+<td style="text-align: right;">8.524.675</td>
+<td style="text-align: right;">2.44</td>
+<td style="text-align: right;">28.5</td>
+<td style="text-align: right;">110.8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D19</td>
+<td style="text-align: right;">10.007.738</td>
+<td style="text-align: right;">9.737.853</td>
+<td style="text-align: right;">2.70</td>
+<td style="text-align: right;">28.8</td>
+<td style="text-align: right;">110.5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D20</td>
+<td style="text-align: right;">9.121.516</td>
+<td style="text-align: right;">8.893.672</td>
+<td style="text-align: right;">2.50</td>
+<td style="text-align: right;">28.0</td>
+<td style="text-align: right;">111.6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D21</td>
+<td style="text-align: right;">8.049.061</td>
+<td style="text-align: right;">7.876.428</td>
+<td style="text-align: right;">2.14</td>
+<td style="text-align: right;">26.9</td>
+<td style="text-align: right;">112.8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D22</td>
+<td style="text-align: right;">8.707.707</td>
+<td style="text-align: right;">8.505.955</td>
+<td style="text-align: right;">2.32</td>
+<td style="text-align: right;">28.0</td>
+<td style="text-align: right;">111.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D23</td>
+<td style="text-align: right;">8.870.788</td>
+<td style="text-align: right;">8.660.278</td>
+<td style="text-align: right;">2.37</td>
+<td style="text-align: right;">28.1</td>
+<td style="text-align: right;">111.3</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>È stato rimosso circa il <strong>30% delle basi sequenziate</strong>, ma solo il <strong>2–3% delle read</strong> è stato scartato.</p>
+<p>Dopo il trimming abbiamo rilanciato FastQC sulle R1 ripulite:</p>
+<p>📊 <strong><a href="reports/quantseq/multiqc/multiqc_fastqc_trimmed.html">Report MultiQC: read dopo il trimming (R1)</a></strong></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Domanda
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Confrontate i moduli <em>Adapter content</em>, <em>Sequence length distribution</em> e <em>Per base sequence quality</em> prima e dopo il trimming. Cosa è cambiato? Perché la percentuale di read duplicate è leggermente <strong>aumentata</strong> dopo il trimming?</p>
+</div>
+</div>
+</section>
+<section id="passo-3-allineamento-con-star" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="passo-3-allineamento-con-star"><span class="header-section-number">4.7</span> Passo 3: allineamento con STAR</h2>
+<p>Le read vengono allineate al genoma di riferimento del topo (<strong>GRCm39</strong>) con <a href="https://github.com/alexdobin/STAR">STAR</a>, un allineatore <strong>splice-aware</strong>: anche se le read QuantSeq sono vicine all’estremità 3’, alcune di esse attraversano una giunzione esone–esone.</p>
+<p>STAR ha bisogno di un <strong>indice</strong> del genoma, costruito una volta sola a partire dal FASTA del genoma e dall’annotazione dei geni (GTF). Abbiamo usato un indice costruito con l’annotazione <strong>Ensembl release 116</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">STAR</span> <span class="at">--runMode</span> genomeGenerate <span class="at">--runThreadN</span> 16 <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--genomeDir</span> mmusculus_v116_149 <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--genomeFastaFiles</span> Mus_musculus.GRCm39.dna.primary_assembly.fa <span class="dt">\</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sjdbGTFfile</span> Mus_musculus.GRCm39.116.gtf <span class="dt">\</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sjdbOverhang</span> 149        <span class="co"># lunghezza delle read - 1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Allineamento, con i parametri consigliati da Lexogen per QuantSeq FWD:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">STAR</span> <span class="at">--runThreadN</span> 8 <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--genomeDir</span> <span class="va">$IDX</span> <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--readFilesIn</span> trimmed/<span class="va">${S}</span>_R1.trim.fastq.gz <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--readFilesCommand</span> zcat <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--outFilterType</span> BySJout <span class="dt">\</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--outFilterMultimapNmax</span> 20 <span class="dt">\</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--alignSJoverhangMin</span> 8 <span class="dt">\</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--alignSJDBoverhangMin</span> 1 <span class="dt">\</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--outFilterMismatchNmax</span> 999 <span class="dt">\</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--outFilterMismatchNoverLmax</span> 0.1 <span class="dt">\</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--alignIntronMin</span> 20 <span class="dt">\</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--alignIntronMax</span> 1000000 <span class="dt">\</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--outSAMattributes</span> NH HI NM MD <span class="dt">\</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--outSAMtype</span> BAM SortedByCoordinate <span class="dt">\</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--quantMode</span> GeneCounts <span class="dt">\</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">--outFileNamePrefix</span> star/<span class="va">${S}</span>/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Opzione</th>
+<th>Significato</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--readFilesIn</code></td>
+<td><strong>un solo</strong> file (R1): STAR lavora in modalità single-end</td>
+</tr>
+<tr class="even">
+<td><code>--outFilterMultimapNmax 20</code></td>
+<td>le read che mappano su più di 20 loci sono considerate non mappate</td>
+</tr>
+<tr class="odd">
+<td><code>--outFilterMismatchNoverLmax 0.1</code></td>
+<td>al massimo 1 mismatch ogni 10 basi allineate</td>
+</tr>
+<tr class="even">
+<td><code>--outSAMtype BAM SortedByCoordinate</code></td>
+<td>salva gli allineamenti in un file BAM ordinato per posizione genomica</td>
+</tr>
+<tr class="odd">
+<td><code>--quantMode GeneCounts</code></td>
+<td>conta le read per gene durante l’allineamento</td>
+</tr>
+</tbody>
+</table>
+<p>Le prime ~12 basi di R1 hanno più mismatch a causa del random primer. STAR le gestisce automaticamente con il <strong>soft-clipping</strong>: le estremità di una read che non corrispondono al genoma vengono escluse dall’allineamento.</p>
+<p>Per ogni campione STAR scrive un file <code>Log.final.out</code> con le statistiche dell’allineamento:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>qc<span class="sc">$</span>pct_unique  <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> qc<span class="sc">$</span>uniquely_mapped <span class="sc">/</span> qc<span class="sc">$</span>trimmed_reads, <span class="dv">1</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>qc<span class="sc">$</span>pct_multi   <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> qc<span class="sc">$</span>multimapped <span class="sc">/</span> qc<span class="sc">$</span>trimmed_reads, <span class="dv">1</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>qc<span class="sc">$</span>pct_toomany <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> qc<span class="sc">$</span>too_many_loci <span class="sc">/</span> qc<span class="sc">$</span>trimmed_reads, <span class="dv">1</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>qc<span class="sc">$</span>pct_unmap   <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> qc<span class="sc">$</span>unmapped <span class="sc">/</span> qc<span class="sc">$</span>trimmed_reads, <span class="dv">1</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(qc[, <span class="fu">c</span>(<span class="st">"id"</span>, <span class="st">"trimmed_reads"</span>, <span class="st">"uniquely_mapped"</span>, <span class="st">"pct_unique"</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>             <span class="st">"pct_multi"</span>, <span class="st">"pct_toomany"</span>, <span class="st">"pct_unmap"</span>)],</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Campione"</span>, <span class="st">"Read in input"</span>, <span class="st">"Mappate in modo univoco"</span>, <span class="st">"% univoche"</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"% multi-mappate"</span>, <span class="st">"% troppi loci"</span>, <span class="st">"% non mappate"</span>),</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">format.args =</span> <span class="fu">list</span>(<span class="at">big.mark =</span> <span class="st">"."</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 13%">
+<col style="width: 23%">
+<col style="width: 10%">
+<col style="width: 15%">
+<col style="width: 13%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Campione</th>
+<th style="text-align: right;">Read in input</th>
+<th style="text-align: right;">Mappate in modo univoco</th>
+<th style="text-align: right;">% univoche</th>
+<th style="text-align: right;">% multi-mappate</th>
+<th style="text-align: right;">% troppi loci</th>
+<th style="text-align: right;">% non mappate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">R09</td>
+<td style="text-align: right;">20.223.841</td>
+<td style="text-align: right;">15.418.375</td>
+<td style="text-align: right;">76.2</td>
+<td style="text-align: right;">21.2</td>
+<td style="text-align: right;">1.7</td>
+<td style="text-align: right;">0.9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">R10</td>
+<td style="text-align: right;">21.340.934</td>
+<td style="text-align: right;">16.258.057</td>
+<td style="text-align: right;">76.2</td>
+<td style="text-align: right;">21.3</td>
+<td style="text-align: right;">1.7</td>
+<td style="text-align: right;">0.9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">R11</td>
+<td style="text-align: right;">24.189.828</td>
+<td style="text-align: right;">18.409.177</td>
+<td style="text-align: right;">76.1</td>
+<td style="text-align: right;">21.4</td>
+<td style="text-align: right;">1.7</td>
+<td style="text-align: right;">0.8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D18</td>
+<td style="text-align: right;">8.524.675</td>
+<td style="text-align: right;">6.434.365</td>
+<td style="text-align: right;">75.5</td>
+<td style="text-align: right;">23.0</td>
+<td style="text-align: right;">0.8</td>
+<td style="text-align: right;">0.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D19</td>
+<td style="text-align: right;">9.737.853</td>
+<td style="text-align: right;">7.322.009</td>
+<td style="text-align: right;">75.2</td>
+<td style="text-align: right;">23.3</td>
+<td style="text-align: right;">0.8</td>
+<td style="text-align: right;">0.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D20</td>
+<td style="text-align: right;">8.893.672</td>
+<td style="text-align: right;">6.728.291</td>
+<td style="text-align: right;">75.7</td>
+<td style="text-align: right;">22.9</td>
+<td style="text-align: right;">0.7</td>
+<td style="text-align: right;">0.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D21</td>
+<td style="text-align: right;">7.876.428</td>
+<td style="text-align: right;">5.946.772</td>
+<td style="text-align: right;">75.5</td>
+<td style="text-align: right;">21.9</td>
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">1.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D22</td>
+<td style="text-align: right;">8.505.955</td>
+<td style="text-align: right;">6.434.581</td>
+<td style="text-align: right;">75.6</td>
+<td style="text-align: right;">22.4</td>
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">0.9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D23</td>
+<td style="text-align: right;">8.660.278</td>
+<td style="text-align: right;">6.535.021</td>
+<td style="text-align: right;">75.5</td>
+<td style="text-align: right;">22.6</td>
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">0.9</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>aln <span class="ot">&lt;-</span> <span class="fu">pivot_longer</span>(qc[, <span class="fu">c</span>(<span class="st">"id"</span>, <span class="st">"uniquely_mapped"</span>, <span class="st">"multimapped"</span>, <span class="st">"too_many_loci"</span>, <span class="st">"unmapped"</span>)],</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                    <span class="sc">-</span>id, <span class="at">names_to =</span> <span class="st">"category"</span>, <span class="at">values_to =</span> <span class="st">"reads"</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>aln<span class="sc">$</span>category <span class="ot">&lt;-</span> <span class="fu">factor</span>(aln<span class="sc">$</span>category,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>                       <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"unmapped"</span>, <span class="st">"too_many_loci"</span>, <span class="st">"multimapped"</span>, <span class="st">"uniquely_mapped"</span>),</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Non mappate"</span>, <span class="st">"Troppi loci"</span>, <span class="st">"Multi-mappate"</span>, <span class="st">"Univoche"</span>))</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(aln, <span class="fu">aes</span>(<span class="at">x =</span> id, <span class="at">y =</span> reads <span class="sc">/</span> <span class="fl">1e6</span>, <span class="at">fill =</span> category)) <span class="sc">+</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Read (milioni)"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>, <span class="at">title =</span> <span class="st">"Allineamento con STAR"</span>) <span class="sc">+</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="fig/quantseq-star-barplot-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Circa il <strong>76% delle read mappa su un unico locus</strong> in tutti i campioni, mentre il ~22% mappa su più loci. È più che in un RNA-seq classico: le read cadono nei 3’ UTR, che sono ricchi di ripetizioni e sequenze a bassa complessità.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Domanda
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>I campioni di controllo hanno più del doppio delle read rispetto ai campioni con i miRNA. La <strong>percentuale</strong> di read mappate è diversa tra le due corse di sequenziamento? Cosa vi dice questo sulla qualità delle due corse?</p>
+</div>
+</div>
+</section>
+<section id="passo-4-conta-delle-read-per-gene" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="passo-4-conta-delle-read-per-gene"><span class="header-section-number">4.8</span> Passo 4: conta delle read per gene</h2>
+<p>Con <code>--quantMode GeneCounts</code>, STAR conta le read <strong>mappate in modo univoco</strong> che si sovrappongono agli esoni di ciascun gene e scrive il file <code>ReadsPerGene.out.tab</code>. Le prime quattro righe sono un riepilogo, poi c’è una riga per gene con <strong>tre colonne di conte</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Colonna</th>
+<th>Conte per una libreria…</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2</td>
+<td><strong>unstranded</strong>: la read viene contata qualunque sia il filamento</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td><strong>forward stranded</strong>: la read deve essere sullo stesso filamento del gene</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td><strong>reverse stranded</strong>: la read deve essere sul filamento opposto</td>
+</tr>
+</tbody>
+</table>
+<p>Quale colonna dobbiamo usare? Guardiamo le righe di riepilogo del campione D21:</p>
+<pre><code>N_unmapped        206240   206240   206240
+N_multimapping   1723416  1723416  1723416
+N_noFeature       333921   345497  5292953
+N_ambiguous       776981   142779     7542</code></pre>
+<ul>
+<li><code>N_noFeature</code>: read che non si sovrappongono a nessun gene;</li>
+<li><code>N_ambiguous</code>: read che si sovrappongono a più di un gene.</li>
+</ul>
+<p>Con la colonna 4 quasi tutte le read cadono fuori dai geni: la libreria non è reverse stranded. Le colonne 2 e 3 hanno un numero simile di <code>N_noFeature</code>, ma la colonna 3 ha <strong>5 volte meno read ambigue</strong>: quando due geni si sovrappongono su filamenti opposti, conoscere il filamento della read permette di assegnarla al gene giusto. È il vantaggio di una libreria <strong>stranded</strong>, ed è esattamente quello che ci aspettiamo da QuantSeq <strong>FWD</strong>: usiamo la <strong>colonna 3</strong>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cnt_summ <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/quantseq/star_counts_summary.csv"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>cnt_summ<span class="sc">$</span>sample <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">"^UNIPD-0(24|46)-"</span>, <span class="st">""</span>, cnt_summ<span class="sc">$</span>sample)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>cnt_summ<span class="sc">$</span>pct_assigned <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> cnt_summ<span class="sc">$</span>N_assigned <span class="sc">/</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                                 (cnt_summ<span class="sc">$</span>N_assigned <span class="sc">+</span> cnt_summ<span class="sc">$</span>N_noFeature <span class="sc">+</span> cnt_summ<span class="sc">$</span>N_ambiguous), <span class="dv">1</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(cnt_summ,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Campione"</span>, <span class="st">"Non mappate"</span>, <span class="st">"Multi-mappate"</span>, <span class="st">"Nessun gene"</span>, <span class="st">"Ambigue"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"Assegnate a un gene"</span>, <span class="st">"% delle univoche assegnate"</span>),</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">format.args =</span> <span class="fu">list</span>(<span class="at">big.mark =</span> <span class="st">"."</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 11%">
+<col style="width: 13%">
+<col style="width: 11%">
+<col style="width: 7%">
+<col style="width: 19%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Campione</th>
+<th style="text-align: right;">Non mappate</th>
+<th style="text-align: right;">Multi-mappate</th>
+<th style="text-align: right;">Nessun gene</th>
+<th style="text-align: right;">Ambigue</th>
+<th style="text-align: right;">Assegnate a un gene</th>
+<th style="text-align: right;">% delle univoche assegnate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">R09</td>
+<td style="text-align: right;">524.240</td>
+<td style="text-align: right;">4.281.226</td>
+<td style="text-align: right;">1.051.545</td>
+<td style="text-align: right;">359.275</td>
+<td style="text-align: right;">14.007.555</td>
+<td style="text-align: right;">90.8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">R10</td>
+<td style="text-align: right;">538.866</td>
+<td style="text-align: right;">4.544.011</td>
+<td style="text-align: right;">1.086.559</td>
+<td style="text-align: right;">375.813</td>
+<td style="text-align: right;">14.795.685</td>
+<td style="text-align: right;">91.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">R11</td>
+<td style="text-align: right;">611.022</td>
+<td style="text-align: right;">5.169.629</td>
+<td style="text-align: right;">1.209.989</td>
+<td style="text-align: right;">428.155</td>
+<td style="text-align: right;">16.771.033</td>
+<td style="text-align: right;">91.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D18</td>
+<td style="text-align: right;">126.586</td>
+<td style="text-align: right;">1.963.724</td>
+<td style="text-align: right;">319.002</td>
+<td style="text-align: right;">161.684</td>
+<td style="text-align: right;">5.953.679</td>
+<td style="text-align: right;">92.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D19</td>
+<td style="text-align: right;">145.195</td>
+<td style="text-align: right;">2.270.649</td>
+<td style="text-align: right;">353.511</td>
+<td style="text-align: right;">185.427</td>
+<td style="text-align: right;">6.783.071</td>
+<td style="text-align: right;">92.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D20</td>
+<td style="text-align: right;">129.169</td>
+<td style="text-align: right;">2.036.212</td>
+<td style="text-align: right;">321.715</td>
+<td style="text-align: right;">172.746</td>
+<td style="text-align: right;">6.233.830</td>
+<td style="text-align: right;">92.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D21</td>
+<td style="text-align: right;">206.240</td>
+<td style="text-align: right;">1.723.416</td>
+<td style="text-align: right;">345.497</td>
+<td style="text-align: right;">142.779</td>
+<td style="text-align: right;">5.458.496</td>
+<td style="text-align: right;">91.8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D22</td>
+<td style="text-align: right;">168.383</td>
+<td style="text-align: right;">1.902.991</td>
+<td style="text-align: right;">371.413</td>
+<td style="text-align: right;">151.797</td>
+<td style="text-align: right;">5.911.371</td>
+<td style="text-align: right;">91.9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D23</td>
+<td style="text-align: right;">165.134</td>
+<td style="text-align: right;">1.960.123</td>
+<td style="text-align: right;">364.358</td>
+<td style="text-align: right;">155.029</td>
+<td style="text-align: right;">6.015.634</td>
+<td style="text-align: right;">92.1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Più del 90% delle read mappate in modo univoco viene assegnato a un gene.</p>
+</section>
+<section id="passo-5-dalla-tabella-di-star-alla-matrice-delle-conte" class="level2" data-number="4.9">
+<h2 data-number="4.9" class="anchored" data-anchor-id="passo-5-dalla-tabella-di-star-alla-matrice-delle-conte"><span class="header-section-number">4.9</span> Passo 5: dalla tabella di STAR alla matrice delle conte</h2>
+<p>Per ogni campione abbiamo un file <code>ReadsPerGene.out.tab</code> (compresso con gzip).</p>
+<section id="pacchetti-r" class="level3" data-number="4.9.1">
+<h3 data-number="4.9.1" class="anchored" data-anchor-id="pacchetti-r"><span class="header-section-number">4.9.1</span> Pacchetti R</h3>
+<p>Per costruire la matrice delle conte ci serve solo il pacchetto <strong>SummarizedExperiment</strong>, già usato nelle esercitazioni precedenti:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(SummarizedExperiment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="lettura-dei-file" class="level3" data-number="4.9.2">
+<h3 data-number="4.9.2" class="anchored" data-anchor-id="lettura-dei-file"><span class="header-section-number">4.9.2</span> Lettura dei file</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">"data/quantseq/star"</span>, <span class="at">pattern =</span> <span class="st">"ReadsPerGene.out.tab.gz$"</span>,</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(files) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">".ReadsPerGene.out.tab.gz"</span>, <span class="st">""</span>, <span class="fu">basename</span>(files))</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">basename</span>(files)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "UNIPD-024-R09.ReadsPerGene.out.tab.gz"
+[2] "UNIPD-024-R10.ReadsPerGene.out.tab.gz"
+[3] "UNIPD-024-R11.ReadsPerGene.out.tab.gz"
+[4] "UNIPD-046-D18.ReadsPerGene.out.tab.gz"
+[5] "UNIPD-046-D19.ReadsPerGene.out.tab.gz"
+[6] "UNIPD-046-D20.ReadsPerGene.out.tab.gz"
+[7] "UNIPD-046-D21.ReadsPerGene.out.tab.gz"
+[8] "UNIPD-046-D22.ReadsPerGene.out.tab.gz"
+[9] "UNIPD-046-D23.ReadsPerGene.out.tab.gz"</code></pre>
+</div>
+</div>
+<p>Leggiamo un file per capirne la struttura:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(files[<span class="dv">1</span>], <span class="at">header =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                  V1      V2      V3       V4
+1         N_unmapped  524240  524240   524240
+2     N_multimapping 4281226 4281226  4281226
+3        N_noFeature 1016870 1051545 13725026
+4        N_ambiguous 1993505  359275    16611
+5 ENSMUSG00000104478       0       0        0
+6 ENSMUSG00000104385       3       3        0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 78352     4</code></pre>
+</div>
+</div>
+<p>Le prime 4 righe sono il riepilogo visto sopra: le saltiamo e teniamo gli identificativi dei geni (colonna 1) e le conte forward stranded (colonna 3). Ripetiamo l’operazione per ogni file con <code>sapply()</code>, che restituisce una matrice con una colonna per campione:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>read_counts <span class="ot">&lt;-</span> <span class="cf">function</span>(f) {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(f, <span class="at">header =</span> <span class="cn">FALSE</span>, <span class="at">skip =</span> <span class="dv">4</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setNames</span>(x<span class="sc">$</span>V3, x<span class="sc">$</span>V1)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>raw_count <span class="ot">&lt;-</span> <span class="fu">sapply</span>(files, read_counts)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(raw_count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 78348     9</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(raw_count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                   UNIPD-024-R09 UNIPD-024-R10 UNIPD-024-R11 UNIPD-046-D18
+ENSMUSG00000104478             0             0             0             0
+ENSMUSG00000104385             3             5             7             1
+ENSMUSG00000101231             0             0             0             0
+ENSMUSG00000101097             0             0             0             0
+ENSMUSG00000100764             4             0             7             1
+ENSMUSG00000100831             0             0             0             0
+                   UNIPD-046-D19 UNIPD-046-D20 UNIPD-046-D21 UNIPD-046-D22
+ENSMUSG00000104478             0             0             0             0
+ENSMUSG00000104385             1             0             2             0
+ENSMUSG00000101231             0             0             0             0
+ENSMUSG00000101097             0             0             0             0
+ENSMUSG00000100764             0             2             3             0
+ENSMUSG00000100831             0             0             0             0
+                   UNIPD-046-D23
+ENSMUSG00000104478             0
+ENSMUSG00000104385             0
+ENSMUSG00000101231             0
+ENSMUSG00000101097             0
+ENSMUSG00000100764             0
+ENSMUSG00000100831             0</code></pre>
+</div>
+</div>
+<p>Prima di andare avanti controlliamo che tutti i file contengano gli stessi geni nello stesso ordine, e che le somme per colonna corrispondano ai valori <code>N_assigned</code> della tabella del passo 4:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>gene_ids <span class="ot">&lt;-</span> <span class="fu">lapply</span>(files, <span class="cf">function</span>(f) <span class="fu">read.delim</span>(f, <span class="at">header =</span> <span class="cn">FALSE</span>, <span class="at">skip =</span> <span class="dv">4</span>)<span class="sc">$</span>V1)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">all</span>(<span class="fu">sapply</span>(gene_ids, identical, gene_ids[[<span class="dv">1</span>]]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(raw_count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>UNIPD-024-R09 UNIPD-024-R10 UNIPD-024-R11 UNIPD-046-D18 UNIPD-046-D19 
+     14007555      14795685      16771033       5953679       6783071 
+UNIPD-046-D20 UNIPD-046-D21 UNIPD-046-D22 UNIPD-046-D23 
+      6233830       5458496       5911371       6015634 </code></pre>
+</div>
+</div>
+<p>Per rendere più leggibili i grafici accorciamo i nomi dei campioni (<code>UNIPD-046-D18</code> diventa <code>D18</code>):</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(raw_count) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">"^UNIPD-0(24|46)-"</span>, <span class="st">""</span>, <span class="fu">colnames</span>(raw_count))</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(raw_count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "R09" "R10" "R11" "D18" "D19" "D20" "D21" "D22" "D23"</code></pre>
+</div>
+</div>
+</section>
+<section id="informazioni-sui-campioni" class="level3" data-number="4.9.3">
+<h3 data-number="4.9.3" class="anchored" data-anchor-id="informazioni-sui-campioni"><span class="header-section-number">4.9.3</span> Informazioni sui campioni</h3>
+<p>Creiamo un <code>data.frame</code> con le informazioni sui campioni. Assegniamo la condizione <strong>a partire dal nome del campione</strong>, così il risultato non dipende dall’ordine dei file:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>condition_map <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">D18 =</span> <span class="st">"miR_A"</span>,  <span class="at">D19 =</span> <span class="st">"miR_A"</span>,  <span class="at">D20 =</span> <span class="st">"miR_A"</span>,</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">D21 =</span> <span class="st">"miR_B"</span>, <span class="at">D22 =</span> <span class="st">"miR_B"</span>, <span class="at">D23 =</span> <span class="st">"miR_B"</span>,</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">R09 =</span> <span class="st">"Ctrl"</span>,    <span class="at">R10 =</span> <span class="st">"Ctrl"</span>,    <span class="at">R11 =</span> <span class="st">"Ctrl"</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">condition =</span> <span class="fu">factor</span>(condition_map[<span class="fu">colnames</span>(raw_count)],</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Ctrl"</span>, <span class="st">"miR_A"</span>, <span class="st">"miR_B"</span>)),</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">run       =</span> <span class="fu">factor</span>(<span class="fu">ifelse</span>(<span class="fu">grepl</span>(<span class="st">"^R"</span>, <span class="fu">colnames</span>(raw_count)), <span class="st">"run024"</span>, <span class="st">"run046"</span>)),</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="fu">colnames</span>(raw_count)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>samples</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    condition    run
+R09      Ctrl run024
+R10      Ctrl run024
+R11      Ctrl run024
+D18    miR_A run046
+D19    miR_A run046
+D20    miR_A run046
+D21   miR_B run046
+D22   miR_B run046
+D23   miR_B run046</code></pre>
+</div>
+</div>
+</section>
+<section id="annotazione-dei-geni" class="level3" data-number="4.9.4">
+<h3 data-number="4.9.4" class="anchored" data-anchor-id="annotazione-dei-geni"><span class="header-section-number">4.9.4</span> Annotazione dei geni</h3>
+<p>Le righe della matrice sono <strong>identificativi Ensembl</strong> dei geni (<code>ENSMUSG...</code>). L’indice di STAR contiene il file <code>geneInfo.tab</code> con il simbolo e il biotipo di ciascun gene:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>genes <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">"data/quantseq/geneInfo.tab.gz"</span>, <span class="at">header =</span> <span class="cn">FALSE</span>, <span class="at">skip =</span> <span class="dv">1</span>,</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"ensembl_id"</span>, <span class="st">"symbol"</span>, <span class="st">"biotype"</span>))</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(genes) <span class="ot">&lt;-</span> genes<span class="sc">$</span>ensembl_id</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>genes <span class="ot">&lt;-</span> genes[<span class="fu">rownames</span>(raw_count), ]</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(genes)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                           ensembl_id  symbol              biotype
+ENSMUSG00000104478 ENSMUSG00000104478 Gm38212                  TEC
+ENSMUSG00000104385 ENSMUSG00000104385  Gm7449 processed_pseudogene
+ENSMUSG00000101231 ENSMUSG00000101231 Gm28283 processed_pseudogene
+ENSMUSG00000101097 ENSMUSG00000101097  Gm6679 processed_pseudogene
+ENSMUSG00000100764 ENSMUSG00000100764 Gm29155               lncRNA
+ENSMUSG00000100831 ENSMUSG00000100831 Gm17847 processed_pseudogene</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">sort</span>(<span class="fu">table</span>(genes<span class="sc">$</span>biotype), <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="dv">8</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+                lncRNA         protein_coding   processed_pseudogene 
+                 32889                  21818                   9312 
+                   TEC                  miRNA unprocessed_pseudogene 
+                  3219                   2206                   2172 
+                snoRNA                  snRNA 
+                  1507                   1381 </code></pre>
+</div>
+</div>
+</section>
+<section id="loggetto-summarizedexperiment" class="level3" data-number="4.9.5">
+<h3 data-number="4.9.5" class="anchored" data-anchor-id="loggetto-summarizedexperiment"><span class="header-section-number">4.9.5</span> L’oggetto SummarizedExperiment</h3>
+<p>Come nella seconda esercitazione, raccogliamo matrice delle conte, informazioni sui campioni e annotazione dei geni in un oggetto <strong>SummarizedExperiment</strong>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>se <span class="ot">&lt;-</span> <span class="fu">SummarizedExperiment</span>(<span class="at">assays =</span> <span class="fu">list</span>(<span class="at">raw_count =</span> raw_count),</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">colData =</span> samples,</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">rowData =</span> genes)</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>se</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 78348 9 
+metadata(0):
+assays(1): raw_count
+rownames(78348): ENSMUSG00000104478 ENSMUSG00000104385 ...
+  ENSMUSG00002074899 ENSMUSG00002076890
+rowData names(3): ensembl_id symbol biotype
+colnames(9): R09 R10 ... D22 D23
+colData names(2): condition run</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(se, <span class="st">"raw_count"</span>)[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                   R09 R10 R11 D18 D19 D20 D21 D22 D23
+ENSMUSG00000104478   0   0   0   0   0   0   0   0   0
+ENSMUSG00000104385   3   5   7   1   1   0   2   0   0
+ENSMUSG00000101231   0   0   0   0   0   0   0   0   0
+ENSMUSG00000101097   0   0   0   0   0   0   0   0   0
+ENSMUSG00000100764   4   0   7   1   0   2   3   0   0
+ENSMUSG00000100831   0   0   0   0   0   0   0   0   0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(se)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 9 rows and 2 columns
+    condition      run
+     &lt;factor&gt; &lt;factor&gt;
+R09   Ctrl      run024
+R10   Ctrl      run024
+R11   Ctrl      run024
+D18   miR_A    run046
+D19   miR_A    run046
+D20   miR_A    run046
+D21   miR_B   run046
+D22   miR_B   run046
+D23   miR_B   run046</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rowData</span>(se)[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 6 rows and 3 columns
+                           ensembl_id      symbol              biotype
+                          &lt;character&gt; &lt;character&gt;          &lt;character&gt;
+ENSMUSG00000104478 ENSMUSG00000104478     Gm38212                  TEC
+ENSMUSG00000104385 ENSMUSG00000104385      Gm7449 processed_pseudogene
+ENSMUSG00000101231 ENSMUSG00000101231     Gm28283 processed_pseudogene
+ENSMUSG00000101097 ENSMUSG00000101097      Gm6679 processed_pseudogene
+ENSMUSG00000100764 ENSMUSG00000100764     Gm29155               lncRNA
+ENSMUSG00000100831 ENSMUSG00000100831     Gm17847 processed_pseudogene</code></pre>
+</div>
+</div>
+<p>Ora l’oggetto <code>se</code> contiene tutto quello che serve per l’analisi. Salviamolo:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(se, <span class="st">"data/quantseq/se_quantseq.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="esercizio-1-commentare-un-report-fastqc" class="level2" data-number="4.10">
+<h2 data-number="4.10" class="anchored" data-anchor-id="esercizio-1-commentare-un-report-fastqc"><span class="header-section-number">4.10</span> Esercizio 1: commentare un report FastQC</h2>
+<p>Scegliete <strong>un report FastQC</strong>. Apritelo, leggete tutti i moduli e scrivete un breve commento (5–10 righe) rispondendo alle seguenti domande:</p>
+<ol type="1">
+<li>Di quale campione si tratta? Quale condizione? È la Read 1 o la Read 2, grezza o dopo il trimming?</li>
+<li>Quante read contiene? Quanto sono lunghe?</li>
+<li>Quali moduli sono PASS, WARN, FAIL? Per ogni FAIL, si tratta di un problema reale o di una conseguenza del tipo di libreria QuantSeq?</li>
+<li><em>Per base sequence quality</em>: come cambia la qualità lungo la read? Perché?</li>
+<li><em>Per base sequence content</em>: cosa succede nelle prime basi? Cosa succede a metà e alla fine della read?</li>
+<li><em>Adapter content</em> e <em>Overrepresented sequences</em>: quali sequenze sono presenti? Da dove vengono?</li>
+<li><em>Sequence duplication levels</em>: quale percentuale di read resterebbe dopo aver rimosso i duplicati? Si tratta di un problema della PCR?</li>
+<li>Terreste questo campione per l’analisi? Perché?</li>
+</ol>
+<p>Poi confrontate il vostro report con quello di un compagno che ha <strong>lo stesso campione</strong> (R1 rispetto a R2, oppure grezzo rispetto a dopo il trimming).</p>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Campione</th>
+<th style="text-align: left;">Condizione</th>
+<th style="text-align: left;">R1 grezza</th>
+<th style="text-align: left;">R2 grezza</th>
+<th style="text-align: left;">R1 trimmed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">UNIPD-046-D18</td>
+<td style="text-align: left;">miR_A</td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D18_R1_fastqc.html">R1</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D18_R2_fastqc.html">R2</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_trimmed/UNIPD-046-D18_R1.trim_fastqc.html">R1 trimmed</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">UNIPD-046-D19</td>
+<td style="text-align: left;">miR_A</td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D19_R1_fastqc.html">R1</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D19_R2_fastqc.html">R2</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_trimmed/UNIPD-046-D19_R1.trim_fastqc.html">R1 trimmed</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">UNIPD-046-D20</td>
+<td style="text-align: left;">miR_A</td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D20_R1_fastqc.html">R1</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D20_R2_fastqc.html">R2</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_trimmed/UNIPD-046-D20_R1.trim_fastqc.html">R1 trimmed</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">UNIPD-046-D21</td>
+<td style="text-align: left;">miR_B</td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D21_R1_fastqc.html">R1</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D21_R2_fastqc.html">R2</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_trimmed/UNIPD-046-D21_R1.trim_fastqc.html">R1 trimmed</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">UNIPD-046-D22</td>
+<td style="text-align: left;">miR_B</td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D22_R1_fastqc.html">R1</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D22_R2_fastqc.html">R2</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_trimmed/UNIPD-046-D22_R1.trim_fastqc.html">R1 trimmed</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">UNIPD-046-D23</td>
+<td style="text-align: left;">miR_B</td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D23_R1_fastqc.html">R1</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-046-D23_R2_fastqc.html">R2</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_trimmed/UNIPD-046-D23_R1.trim_fastqc.html">R1 trimmed</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">UNIPD-024-R09</td>
+<td style="text-align: left;">Ctrl</td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-024-R09_R1_fastqc.html">R1</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-024-R09_R2_fastqc.html">R2</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_trimmed/UNIPD-024-R09_R1.trim_fastqc.html">R1 trimmed</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">UNIPD-024-R10</td>
+<td style="text-align: left;">Ctrl</td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-024-R10_R1_fastqc.html">R1</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-024-R10_R2_fastqc.html">R2</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_trimmed/UNIPD-024-R10_R1.trim_fastqc.html">R1 trimmed</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">UNIPD-024-R11</td>
+<td style="text-align: left;">Ctrl</td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-024-R11_R1_fastqc.html">R1</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_raw/UNIPD-024-R11_R2_fastqc.html">R2</a></td>
+<td style="text-align: left;"><a href="reports/quantseq/fastqc_trimmed/UNIPD-024-R11_R1.trim_fastqc.html">R1 trimmed</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>📊 <strong><a href="reports/quantseq/multiqc/multiqc_all.html">Report MultiQC: tutti i passaggi (FastQC, cutadapt, STAR)</a></strong></p>
+</section>
+<section id="esercizio-2-analisi-dei-dati" class="level2" data-number="4.11">
+<h2 data-number="4.11" class="anchored" data-anchor-id="esercizio-2-analisi-dei-dati"><span class="header-section-number">4.11</span> Esercizio 2: analisi dei dati</h2>
+<p>Partendo dall’oggetto <code>se</code>, analizzate i dati seguendo i passaggi delle esercitazioni precedenti (<a href="../esercitazioni/hand-on-2.html">Lab 2</a> e <a href="../esercitazioni/hand-on-3.html">Lab 3</a>).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>se <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/quantseq/se_quantseq.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="filtraggio" class="level3" data-number="4.11.1">
+<h3 data-number="4.11.1" class="anchored" data-anchor-id="filtraggio"><span class="header-section-number">4.11.1</span> Filtraggio</h3>
+<p>Eliminate i geni poco espressi, come nel Lab 2. Quanti geni restano? Quali biotipi sono più rappresentati tra i geni espressi?</p>
+</section>
+<section id="analisi-esplorativa" class="level3" data-number="4.11.2">
+<h3 data-number="4.11.2" class="anchored" data-anchor-id="analisi-esplorativa"><span class="header-section-number">4.11.2</span> Analisi esplorativa</h3>
+<p>Usate boxplot, MD plot, RLE plot e PCA sulle conte grezze trasformate con <code>log1p()</code>. Nei grafici colorate i campioni per <strong>condizione</strong> e, nella PCA, usate una forma diversa per ciascuna <strong>corsa di sequenziamento</strong> (<code>autoplot(..., colour = "condition", shape = "run")</code>).</p>
+<ul>
+<li>Le repliche di ciascun gruppo si somigliano? Ci sono campioni anomali?</li>
+<li>Quali campioni separa la prima componente principale? Si tratta di biologia o di profondità di sequenziamento?</li>
+</ul>
+</section>
+<section id="normalizzazione" class="level3" data-number="4.11.3">
+<h3 data-number="4.11.3" class="anchored" data-anchor-id="normalizzazione"><span class="header-section-number">4.11.3</span> Normalizzazione</h3>
+<p>Calcolate le normalizzazioni total count, RLE, TMM e upper quartile e confrontatele con boxplot, RLE plot e PCA, come nel Lab 2.</p>
+<ul>
+<li>Quale normalizzazione rende i campioni più confrontabili?</li>
+<li>Come cambia la PCA dopo la normalizzazione?</li>
+<li>Perché con QuantSeq non serve la normalizzazione per la lunghezza dei geni?</li>
+</ul>
+</section>
+<section id="analisi-differenziale-con-edger" class="level3" data-number="4.11.4">
+<h3 data-number="4.11.4" class="anchored" data-anchor-id="analisi-differenziale-con-edger"><span class="header-section-number">4.11.4</span> Analisi differenziale con edgeR</h3>
+<p>Seguite il Lab 3: create un oggetto <code>DGEList</code>, calcolate i fattori di normalizzazione TMM, stimate la dispersione e adattate il modello lineare generalizzato.</p>
+<p>Rispetto al Lab 3 ci sono <strong>tre gruppi</strong>. Con il disegno sperimentale <code>~ condition</code> il gruppo di riferimento è <code>Ctrl</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span> condition, <span class="at">data =</span> <span class="fu">colData</span>(se))</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(design)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<ul>
+<li><code>coef = 2</code> confronta <strong>miRNA A con il controllo</strong>;</li>
+<li><code>coef = 3</code> confronta <strong>miRNA B con il controllo</strong>;</li>
+<li>per confrontare <strong>miRNA A con miRNA B</strong> si usa un contrasto:</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>res_A_vs_B <span class="ot">&lt;-</span> <span class="fu">glmLRT</span>(fit, <span class="at">contrast =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Per ciascun confronto: quanti geni sono differenzialmente espressi (<span class="math inline">\(FDR &lt; 0.05\)</span>)? Visualizzate MD plot, volcano plot e distribuzione dei p-value.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Quali confronti sono affidabili?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Ricordate che i controlli sono stati sequenziati in una corsa diversa. Nei confronti <strong>miRNA contro controllo</strong> l’effetto del miRNA e quello della corsa sono <strong>confusi</strong> (<em>confounded</em>) e non possono essere separati. Il confronto <strong>miRNA A contro miRNA B</strong> non ha questo problema. Tenetene conto quando interpretate il numero di geni differenzialmente espressi e la distribuzione dei p-value.</p>
+</div>
+</div>
+</section>
+<section id="analisi-di-arricchimento" class="level3" data-number="4.11.5">
+<h3 data-number="4.11.5" class="anchored" data-anchor-id="analisi-di-arricchimento"><span class="header-section-number">4.11.5</span> Analisi di arricchimento</h3>
+<p>Ripetete l’analisi di arricchimento del Lab 3 (ORA e GSEA). Attenzione: questa volta i dati sono di <strong>topo</strong>:</p>
+<ul>
+<li>usate <code>org.Mm.eg.db</code> al posto di <code>org.Hs.eg.db</code>;</li>
+<li>per KEGG usate <code>organism = "mmu"</code>, per Reactome <code>organism = "mouse"</code>;</li>
+<li>per convertire gli identificativi Ensembl in Entrez usate <code>mapIds(org.Mm.eg.db, ..., column = "ENTREZID", keytype = "ENSEMBL")</code>, come nel Lab 3.</li>
+</ul>
+</section>
+<section id="domanda-finale" class="level3" data-number="4.11.6">
+<h3 data-number="4.11.6" class="anchored" data-anchor-id="domanda-finale"><span class="header-section-number">4.11.6</span> Domanda finale</h3>
+<p>I miRNA riducono l’espressione dei loro mRNA bersaglio. Cercate su <a href="https://www.targetscan.org/mmu_80/">TargetScan Mouse</a> i target predetti di miRNA A e di miRNA B: risultano down-regolati nei campioni corrispondenti? I pathway arricchiti sono coerenti con quello che sapete sulla funzione di questi due miRNA nelle cellule muscolari?</p>
+</section>
+</section>
+<section id="informazioni-sulla-sessione" class="level2" data-number="4.12">
+<h2 data-number="4.12" class="anchored" data-anchor-id="informazioni-sulla-sessione"><span class="header-section-number">4.12</span> Informazioni sulla sessione</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.6.2 (2026-10-29)
+Platform: x86_64-pc-linux-gnu
+Running under: Ubuntu 24.04.5 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0 
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0  LAPACK version 3.12.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Europe/Rome
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats4    stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] SummarizedExperiment_1.42.0 Biobase_2.72.0             
+ [3] GenomicRanges_1.64.0        Seqinfo_1.2.0              
+ [5] IRanges_2.46.0              S4Vectors_0.50.3           
+ [7] BiocGenerics_0.58.1         generics_0.1.4             
+ [9] MatrixGenerics_1.24.0       matrixStats_1.5.0          
+[11] tidyr_1.3.2                 ggplot2_4.0.3              
+[13] knitr_1.52                 
+
+loaded via a namespace (and not attached):
+ [1] SparseArray_1.12.3  lattice_0.23-1      digest_0.6.39      
+ [4] magrittr_2.0.5      evaluate_1.0.5      grid_4.6.2         
+ [7] RColorBrewer_1.1-3  fastmap_1.2.0       jsonlite_2.0.0     
+[10] Matrix_1.7-6        purrr_1.2.2         scales_1.4.0       
+[13] abind_1.4-8         cli_3.6.6           rlang_1.3.0        
+[16] XVector_0.52.0      withr_3.0.3         DelayedArray_0.38.2
+[19] yaml_2.3.12         otel_0.2.0          S4Arrays_1.12.1    
+[22] tools_4.6.2         dplyr_1.2.1         vctrs_0.7.3        
+[25] R6_2.6.1            lifecycle_1.0.5     htmlwidgets_1.6.4  
+[28] pkgconfig_2.0.3     pillar_1.11.1       gtable_0.3.6       
+[31] glue_1.8.1          xfun_0.62           tibble_3.3.1       
+[34] tidyselect_1.2.1    rstudioapi_0.19.0   dichromat_2.0-1    
+[37] farver_2.1.2        htmltools_0.5.9     rmarkdown_2.32     
+[40] labeling_0.4.3      compiler_4.6.2      S7_0.2.2           </code></pre>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../esercitazioni/hand-on-3.html" class="pagination-link" aria-label="Lab 3: Inference with edgeR and enrichment analysis">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Lab 3: Inference with edgeR and enrichment analysis</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../risorse.html" class="pagination-link" aria-label="Testi di riferimento">
+        <span class="nav-page-text">Testi di riferimento</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -65,7 +65,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../risorse.html" rel="next">
+<link href="../esercitazioni/hand-on-4.html" rel="next">
 <link href="../esercitazioni/hand-on-2.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -206,6 +206,12 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="../esercitazioni/hand-on-3.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Lab 3: Inference with edgeR and enrichment analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../esercitazioni/hand-on-4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Lab 4: dai file FASTQ alla matrice delle conte (QuantSeq 3’ mRNA-seq)</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -784,26 +790,26 @@ FALSE
 <div class="cell-output cell-output-stdout">
 <pre><code>               ID                                  Description setSize
 hsa00982 hsa00982            Drug metabolism - cytochrome P450      66
-hsa00040 hsa00040     Pentose and glucuronate interconversions      34
-hsa00053 hsa00053            Ascorbate and aldarate metabolism      28
 hsa00980 hsa00980 Metabolism of xenobiotics by cytochrome P450      72
 hsa04975 hsa04975                 Fat digestion and absorption      43
-hsa00983 hsa00983              Drug metabolism - other enzymes      77
+hsa00053 hsa00053            Ascorbate and aldarate metabolism      28
+hsa00040 hsa00040     Pentose and glucuronate interconversions      34
 hsa00860 hsa00860                         Porphyrin metabolism      43
-hsa04950 hsa04950         Maturity onset diabetes of the young      26
+hsa00340 hsa00340                         Histidine metabolism      22
 hsa05204 hsa05204        Chemical carcinogenesis - DNA adducts      66
-hsa04081 hsa04081                            Hormone signaling     215
+hsa04950 hsa04950         Maturity onset diabetes of the young      26
+hsa00983 hsa00983              Drug metabolism - other enzymes      77
          enrichmentScore      NES       pvalue     p.adjust
-hsa00982       0.7202440 2.585143 1.000000e-10 1.160000e-08
-hsa00040       0.7940977 2.522702 7.277272e-09 3.165613e-07
-hsa00053       0.8184001 2.485231 9.115073e-09 3.524495e-07
-hsa00980       0.6790471 2.482907 3.017144e-10 2.099932e-08
-hsa04975       0.7282462 2.424895 6.078748e-08 1.627234e-06
-hsa00983       0.6083788 2.314977 4.962571e-08 1.439146e-06
-hsa00860       0.6943046 2.311877 6.702632e-07 1.227640e-05
-hsa04950       0.7655439 2.281325 5.325750e-06 5.791753e-05
-hsa05204       0.6169566 2.214418 7.831015e-07 1.346315e-05
-hsa04081       0.5090391 2.195185 1.000000e-10 1.160000e-08</code></pre>
+hsa00982       0.7202440 2.634349 1.000000e-10 5.800000e-09
+hsa00980       0.6790471 2.489094 1.000000e-10 5.800000e-09
+hsa04975       0.7282462 2.453065 3.174702e-08 8.498432e-07
+hsa00053       0.8184001 2.430193 2.443378e-08 7.085795e-07
+hsa00040       0.7940977 2.369826 4.115744e-09 1.591421e-07
+hsa00860       0.6943046 2.338734 3.793096e-07 7.764690e-06
+hsa00340       0.7647783 2.265720 2.181382e-05 1.851515e-04
+hsa05204       0.6169566 2.256568 1.932719e-07 4.508393e-06
+hsa04950       0.7655439 2.216718 4.123153e-06 4.348053e-05
+hsa00983       0.6083788 2.202429 1.601903e-08 5.274483e-07</code></pre>
 </div>
 </div>
 <p>Visualize the distribution of the ranking statistics across the different gene sets.</p>
@@ -848,25 +854,25 @@ hsa04081       0.5090391 2.195185 1.000000e-10 1.160000e-08</code></pre>
 <pre><code>                   ID                                      Description setSize
 GO:0007586 GO:0007586                                        digestion     120
 GO:0046887 GO:0046887         positive regulation of hormone secretion     137
-GO:0090277 GO:0090277 positive regulation of peptide hormone secretion     105
 GO:0030072 GO:0030072                        peptide hormone secretion     208
-GO:0022900 GO:0022900                         electron transport chain     120
+GO:0090277 GO:0090277 positive regulation of peptide hormone secretion     105
+GO:0071384 GO:0071384     cellular response to corticosteroid stimulus      58
 GO:0022600 GO:0022600                         digestive system process      90
-GO:0002790 GO:0002790                                peptide secretion     212
-GO:0046883 GO:0046883                  regulation of hormone secretion     234
-GO:0071385 GO:0071385     cellular response to glucocorticoid stimulus      49
 GO:0050892 GO:0050892                            intestinal absorption      34
+GO:0030073 GO:0030073                                insulin secretion     169
+GO:0090276 GO:0090276          regulation of peptide hormone secretion     181
+GO:0002793 GO:0002793         positive regulation of peptide secretion     106
            enrichmentScore      NES       pvalue
-GO:0007586       0.6378296 2.548071 1.000000e-10
-GO:0046887       0.5924269 2.358902 1.000000e-10
-GO:0090277       0.6066107 2.342126 2.305389e-10
-GO:0030072       0.5549235 2.329105 1.000000e-10
-GO:0022900       0.5786191 2.311530 1.000000e-10
-GO:0022600       0.6233988 2.308604 1.078491e-09
-GO:0002790       0.5418583 2.301348 1.000000e-10
-GO:0046883       0.5295584 2.295742 1.000000e-10
-GO:0071385       0.6620504 2.286153 6.839382e-07
-GO:0050892       0.7217127 2.284249 1.371777e-06</code></pre>
+GO:0007586       0.6378296 2.460557 1.000000e-10
+GO:0046887       0.5924269 2.402631 1.000000e-10
+GO:0030072       0.5549235 2.375913 1.000000e-10
+GO:0090277       0.6066107 2.361828 1.990336e-10
+GO:0071384       0.6513458 2.359765 1.303615e-07
+GO:0022600       0.6233988 2.348870 1.562288e-09
+GO:0050892       0.7217127 2.341704 2.048972e-06
+GO:0030073       0.5695748 2.335989 1.000000e-10
+GO:0090276       0.5451999 2.334867 1.000000e-10
+GO:0002793       0.5952844 2.319679 8.833677e-10</code></pre>
 </div>
 </div>
 <p>Visualize the distribution of the ranking statistics across the different gene sets.</p>
@@ -1318,8 +1324,8 @@ GO:0050892       0.7217127 2.284249 1.371777e-06</code></pre>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../risorse.html" class="pagination-link" aria-label="Testi di riferimento">
-        <span class="nav-page-text">Testi di riferimento</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../esercitazioni/hand-on-4.html" class="pagination-link" aria-label="Lab 4: dai file FASTQ alla matrice delle conte (QuantSeq 3' mRNA-seq)">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Lab 4: dai file FASTQ alla matrice delle conte (QuantSeq 3’ mRNA-seq)</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
