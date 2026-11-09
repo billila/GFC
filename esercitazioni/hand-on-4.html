@@ -74,6 +74,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="hand-on-4_files/libs/quarto-diagram/mermaid-init.js"></script>
 <link href="hand-on-4_files/libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -118,7 +147,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   D --&gt; E[Controllo qualità&lt;br/&gt;dopo il trimming]
   D --&gt; F[Allineamento&lt;br/&gt;STAR]
   F --&gt; G[Conte per gene&lt;br/&gt;STAR GeneCounts]
-  G --&gt; H[Matrice delle conte&lt;br/&gt;edgeR DGEList]
+  G --&gt; H[Matrice delle conte&lt;br/&gt;SummarizedExperiment]
   E --&gt; I[MultiQC&lt;br/&gt;report finale]
   F --&gt; I
 </pre>
@@ -983,28 +1012,24 @@ N_ambiguous       776981   142779     7542</code></pre>
 </div>
 </div>
 <p>Più del 90% delle read mappate in modo univoco viene assegnato a un gene.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Perché non serve normalizzare per la lunghezza dei geni?
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>In un esperimento RNA-seq classico un trascritto lungo produce più frammenti di uno corto, quindi per confrontare geni diversi le conte vanno corrette per la lunghezza (per esempio RPKM, TPM). In QuantSeq ogni trascritto produce <strong>un solo frammento</strong>, qualunque sia la sua lunghezza: le conte sono direttamente proporzionali al numero di molecole.</p>
-</div>
+</section>
+<section id="passo-5-dalla-tabella-di-star-alla-matrice-delle-conte" class="level2">
+<h2 class="anchored" data-anchor-id="passo-5-dalla-tabella-di-star-alla-matrice-delle-conte">Passo 5: dalla tabella di STAR alla matrice delle conte</h2>
+<p>Adesso tocca a voi. Per ogni campione abbiamo un file <code>ReadsPerGene.out.tab</code> (compresso con gzip) nella cartella <code>data/quantseq/star/</code>.</p>
+<section id="pacchetti-r" class="level3">
+<h3 class="anchored" data-anchor-id="pacchetti-r">Pacchetti R</h3>
+<p>Per costruire la matrice delle conte ci serve solo il pacchetto <strong>SummarizedExperiment</strong>, già usato nelle esercitazioni precedenti:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(SummarizedExperiment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="passo-5-costruire-la-matrice-delle-conte-in-r" class="level2">
-<h2 class="anchored" data-anchor-id="passo-5-costruire-la-matrice-delle-conte-in-r">Passo 5: costruire la matrice delle conte in R</h2>
-<p>Adesso tocca a voi. Per ogni campione abbiamo un file <code>ReadsPerGene.out.tab</code> (compresso con gzip) nella cartella <code>data/quantseq/star/</code>.</p>
+<section id="lettura-dei-file" class="level3">
+<h3 class="anchored" data-anchor-id="lettura-dei-file">Lettura dei file</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">"data/quantseq/star"</span>, <span class="at">pattern =</span> <span class="st">"ReadsPerGene.out.tab.gz$"</span>,</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(files) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">".ReadsPerGene.out.tab.gz"</span>, <span class="st">""</span>, <span class="fu">basename</span>(files))</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">basename</span>(files)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">"data/quantseq/star"</span>, <span class="at">pattern =</span> <span class="st">"ReadsPerGene.out.tab.gz$"</span>,</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(files) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">".ReadsPerGene.out.tab.gz"</span>, <span class="st">""</span>, <span class="fu">basename</span>(files))</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">basename</span>(files)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "UNIPD-024-R09.ReadsPerGene.out.tab.gz"
 [2] "UNIPD-024-R10.ReadsPerGene.out.tab.gz"
@@ -1019,8 +1044,8 @@ N_ambiguous       776981   142779     7542</code></pre>
 </div>
 <p>Leggiamo un file per capirne la struttura:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(files[<span class="dv">1</span>], <span class="at">header =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(files[<span class="dv">1</span>], <span class="at">header =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                  V1      V2      V3       V4
 1         N_unmapped  524240  524240   524240
@@ -1030,24 +1055,24 @@ N_ambiguous       776981   142779     7542</code></pre>
 5 ENSMUSG00000104478       0       0        0
 6 ENSMUSG00000104385       3       3        0</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 78352     4</code></pre>
 </div>
 </div>
 <p>Le prime 4 righe sono il riepilogo visto sopra: le saltiamo e teniamo gli identificativi dei geni (colonna 1) e le conte forward stranded (colonna 3). Ripetiamo l’operazione per ogni file con <code>sapply()</code>, che restituisce una matrice con una colonna per campione:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>read_counts <span class="ot">&lt;-</span> <span class="cf">function</span>(f) {</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(f, <span class="at">header =</span> <span class="cn">FALSE</span>, <span class="at">skip =</span> <span class="dv">4</span>)</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setNames</span>(x<span class="sc">$</span>V3, x<span class="sc">$</span>V1)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>counts <span class="ot">&lt;-</span> <span class="fu">sapply</span>(files, read_counts)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(counts)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>read_counts <span class="ot">&lt;-</span> <span class="cf">function</span>(f) {</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(f, <span class="at">header =</span> <span class="cn">FALSE</span>, <span class="at">skip =</span> <span class="dv">4</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setNames</span>(x<span class="sc">$</span>V3, x<span class="sc">$</span>V1)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>raw_count <span class="ot">&lt;-</span> <span class="fu">sapply</span>(files, read_counts)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(raw_count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 78348     9</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(counts)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(raw_count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                   UNIPD-024-R09 UNIPD-024-R10 UNIPD-024-R11 UNIPD-046-D18
 ENSMUSG00000104478             0             0             0             0
@@ -1072,14 +1097,14 @@ ENSMUSG00000100764             0
 ENSMUSG00000100831             0</code></pre>
 </div>
 </div>
-<p>Prima di andare avanti controlliamo che tutti i file contengano gli stessi geni nello stesso ordine, e che le somme per colonna corrispondano ai valori <code>N_assigned</code> della tabella precedente:</p>
+<p>Prima di andare avanti controlliamo che tutti i file contengano gli stessi geni nello stesso ordine, e che le somme per colonna corrispondano ai valori <code>N_assigned</code> della tabella del passo 4:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>gene_ids <span class="ot">&lt;-</span> <span class="fu">lapply</span>(files, <span class="cf">function</span>(f) <span class="fu">read.delim</span>(f, <span class="at">header =</span> <span class="cn">FALSE</span>, <span class="at">skip =</span> <span class="dv">4</span>)<span class="sc">$</span>V1)</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">all</span>(<span class="fu">sapply</span>(gene_ids, identical, gene_ids[[<span class="dv">1</span>]]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>gene_ids <span class="ot">&lt;-</span> <span class="fu">lapply</span>(files, <span class="cf">function</span>(f) <span class="fu">read.delim</span>(f, <span class="at">header =</span> <span class="cn">FALSE</span>, <span class="at">skip =</span> <span class="dv">4</span>)<span class="sc">$</span>V1)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">all</span>(<span class="fu">sapply</span>(gene_ids, identical, gene_ids[[<span class="dv">1</span>]]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] TRUE</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(counts)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(raw_count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>UNIPD-024-R09 UNIPD-024-R10 UNIPD-024-R11 UNIPD-046-D18 UNIPD-046-D19 
      14007555      14795685      16771033       5953679       6783071 
@@ -1087,34 +1112,41 @@ UNIPD-046-D20 UNIPD-046-D21 UNIPD-046-D22 UNIPD-046-D23
       6233830       5458496       5911371       6015634 </code></pre>
 </div>
 </div>
+<p>Per rendere più leggibili i grafici accorciamo i nomi dei campioni (<code>UNIPD-046-D18</code> diventa <code>D18</code>):</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(raw_count) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">"^UNIPD-0(24|46)-"</span>, <span class="st">""</span>, <span class="fu">colnames</span>(raw_count))</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(raw_count)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "R09" "R10" "R11" "D18" "D19" "D20" "D21" "D22" "D23"</code></pre>
+</div>
+</div>
+</section>
 <section id="informazioni-sui-campioni" class="level3">
 <h3 class="anchored" data-anchor-id="informazioni-sui-campioni">Informazioni sui campioni</h3>
 <p>Creiamo un <code>data.frame</code> con le informazioni sui campioni. Assegniamo la condizione <strong>a partire dal nome del campione</strong>, così il risultato non dipende dall’ordine dei file:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>id <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">"^UNIPD-0(24|46)-"</span>, <span class="st">""</span>, <span class="fu">colnames</span>(counts))</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>condition_map <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">D18 =</span> <span class="st">"miR_A"</span>,  <span class="at">D19 =</span> <span class="st">"miR_A"</span>,  <span class="at">D20 =</span> <span class="st">"miR_A"</span>,</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">D21 =</span> <span class="st">"miR_B"</span>, <span class="at">D22 =</span> <span class="st">"miR_B"</span>, <span class="at">D23 =</span> <span class="st">"miR_B"</span>,</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">R09 =</span> <span class="st">"Ctrl"</span>,    <span class="at">R10 =</span> <span class="st">"Ctrl"</span>,    <span class="at">R11 =</span> <span class="st">"Ctrl"</span>)</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sample    =</span> <span class="fu">colnames</span>(counts),</span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">id        =</span> id,</span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">condition =</span> <span class="fu">factor</span>(condition_map[id], <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Ctrl"</span>, <span class="st">"miR_A"</span>, <span class="st">"miR_B"</span>)),</span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">run       =</span> <span class="fu">factor</span>(<span class="fu">ifelse</span>(<span class="fu">grepl</span>(<span class="st">"^UNIPD-024"</span>, <span class="fu">colnames</span>(counts)), <span class="st">"run024"</span>, <span class="st">"run046"</span>)),</span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="fu">colnames</span>(counts)</span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>samples</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>condition_map <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">D18 =</span> <span class="st">"miR_A"</span>,  <span class="at">D19 =</span> <span class="st">"miR_A"</span>,  <span class="at">D20 =</span> <span class="st">"miR_A"</span>,</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">D21 =</span> <span class="st">"miR_B"</span>, <span class="at">D22 =</span> <span class="st">"miR_B"</span>, <span class="at">D23 =</span> <span class="st">"miR_B"</span>,</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">R09 =</span> <span class="st">"Ctrl"</span>,    <span class="at">R10 =</span> <span class="st">"Ctrl"</span>,    <span class="at">R11 =</span> <span class="st">"Ctrl"</span>)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">condition =</span> <span class="fu">factor</span>(condition_map[<span class="fu">colnames</span>(raw_count)],</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Ctrl"</span>, <span class="st">"miR_A"</span>, <span class="st">"miR_B"</span>)),</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">run       =</span> <span class="fu">factor</span>(<span class="fu">ifelse</span>(<span class="fu">grepl</span>(<span class="st">"^R"</span>, <span class="fu">colnames</span>(raw_count)), <span class="st">"run024"</span>, <span class="st">"run046"</span>)),</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="fu">colnames</span>(raw_count)</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>samples</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                     sample  id condition    run
-UNIPD-024-R09 UNIPD-024-R09 R09      Ctrl run024
-UNIPD-024-R10 UNIPD-024-R10 R10      Ctrl run024
-UNIPD-024-R11 UNIPD-024-R11 R11      Ctrl run024
-UNIPD-046-D18 UNIPD-046-D18 D18    miR_A run046
-UNIPD-046-D19 UNIPD-046-D19 D19    miR_A run046
-UNIPD-046-D20 UNIPD-046-D20 D20    miR_A run046
-UNIPD-046-D21 UNIPD-046-D21 D21   miR_B run046
-UNIPD-046-D22 UNIPD-046-D22 D22   miR_B run046
-UNIPD-046-D23 UNIPD-046-D23 D23   miR_B run046</code></pre>
+<pre><code>    condition    run
+R09      Ctrl run024
+R10      Ctrl run024
+R11      Ctrl run024
+D18    miR_A run046
+D19    miR_A run046
+D20    miR_A run046
+D21   miR_B run046
+D22   miR_B run046
+D23   miR_B run046</code></pre>
 </div>
 </div>
 </section>
@@ -1122,11 +1154,11 @@ UNIPD-046-D23 UNIPD-046-D23 D23   miR_B run046</code></pre>
 <h3 class="anchored" data-anchor-id="annotazione-dei-geni">Annotazione dei geni</h3>
 <p>Le righe della matrice sono <strong>identificativi Ensembl</strong> dei geni (<code>ENSMUSG...</code>). L’indice di STAR contiene il file <code>geneInfo.tab</code> con il simbolo e il biotipo di ciascun gene:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>genes <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">"data/quantseq/geneInfo.tab.gz"</span>, <span class="at">header =</span> <span class="cn">FALSE</span>, <span class="at">skip =</span> <span class="dv">1</span>,</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"ensembl_id"</span>, <span class="st">"symbol"</span>, <span class="st">"biotype"</span>))</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(genes) <span class="ot">&lt;-</span> genes<span class="sc">$</span>ensembl_id</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>genes <span class="ot">&lt;-</span> genes[<span class="fu">rownames</span>(counts), ]</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(genes)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>genes <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">"data/quantseq/geneInfo.tab.gz"</span>, <span class="at">header =</span> <span class="cn">FALSE</span>, <span class="at">skip =</span> <span class="dv">1</span>,</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"ensembl_id"</span>, <span class="st">"symbol"</span>, <span class="st">"biotype"</span>))</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(genes) <span class="ot">&lt;-</span> genes<span class="sc">$</span>ensembl_id</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>genes <span class="ot">&lt;-</span> genes[<span class="fu">rownames</span>(raw_count), ]</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(genes)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                           ensembl_id  symbol              biotype
 ENSMUSG00000104478 ENSMUSG00000104478 Gm38212                  TEC
@@ -1136,7 +1168,7 @@ ENSMUSG00000101097 ENSMUSG00000101097  Gm6679 processed_pseudogene
 ENSMUSG00000100764 ENSMUSG00000100764 Gm29155               lncRNA
 ENSMUSG00000100831 ENSMUSG00000100831 Gm17847 processed_pseudogene</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">sort</span>(<span class="fu">table</span>(genes<span class="sc">$</span>biotype), <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="dv">8</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">sort</span>(<span class="fu">table</span>(genes<span class="sc">$</span>biotype), <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="dv">8</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
                 lncRNA         protein_coding   processed_pseudogene 
@@ -1148,179 +1180,71 @@ ENSMUSG00000100831 ENSMUSG00000100831 Gm17847 processed_pseudogene</code></pre>
 </div>
 </div>
 </section>
-<section id="loggetto-dgelist" class="level3">
-<h3 class="anchored" data-anchor-id="loggetto-dgelist">L’oggetto DGEList</h3>
-<p>Come nelle esercitazioni precedenti usiamo <strong>edgeR</strong>. L’oggetto <code>DGEList</code> raccoglie in un unico oggetto la matrice delle conte, le informazioni sui campioni e l’annotazione dei geni:</p>
+<section id="loggetto-summarizedexperiment" class="level3">
+<h3 class="anchored" data-anchor-id="loggetto-summarizedexperiment">L’oggetto SummarizedExperiment</h3>
+<p>Come nella seconda esercitazione, raccogliamo matrice delle conte, informazioni sui campioni e annotazione dei geni in un oggetto <strong>SummarizedExperiment</strong>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(edgeR)</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>dge <span class="ot">&lt;-</span> <span class="fu">DGEList</span>(<span class="at">counts =</span> counts, <span class="at">samples =</span> samples, <span class="at">genes =</span> genes)</span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>dge</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>se <span class="ot">&lt;-</span> <span class="fu">SummarizedExperiment</span>(<span class="at">assays =</span> <span class="fu">list</span>(<span class="at">raw_count =</span> raw_count),</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">colData =</span> samples,</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">rowData =</span> genes)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>se</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>An object of class "DGEList"
-$counts
-                   UNIPD-024-R09 UNIPD-024-R10 UNIPD-024-R11 UNIPD-046-D18
-ENSMUSG00000104478             0             0             0             0
-ENSMUSG00000104385             3             5             7             1
-ENSMUSG00000101231             0             0             0             0
-ENSMUSG00000101097             0             0             0             0
-ENSMUSG00000100764             4             0             7             1
-                   UNIPD-046-D19 UNIPD-046-D20 UNIPD-046-D21 UNIPD-046-D22
-ENSMUSG00000104478             0             0             0             0
-ENSMUSG00000104385             1             0             2             0
-ENSMUSG00000101231             0             0             0             0
-ENSMUSG00000101097             0             0             0             0
-ENSMUSG00000100764             0             2             3             0
-                   UNIPD-046-D23
-ENSMUSG00000104478             0
-ENSMUSG00000104385             0
-ENSMUSG00000101231             0
-ENSMUSG00000101097             0
-ENSMUSG00000100764             0
-78343 more rows ...
-
-$samples
-              group lib.size norm.factors        sample  id condition    run
-UNIPD-024-R09     1 14007555            1 UNIPD-024-R09 R09      Ctrl run024
-UNIPD-024-R10     1 14795685            1 UNIPD-024-R10 R10      Ctrl run024
-UNIPD-024-R11     1 16771033            1 UNIPD-024-R11 R11      Ctrl run024
-UNIPD-046-D18     1  5953679            1 UNIPD-046-D18 D18    miR_A run046
-UNIPD-046-D19     1  6783071            1 UNIPD-046-D19 D19    miR_A run046
-UNIPD-046-D20     1  6233830            1 UNIPD-046-D20 D20    miR_A run046
-UNIPD-046-D21     1  5458496            1 UNIPD-046-D21 D21   miR_B run046
-UNIPD-046-D22     1  5911371            1 UNIPD-046-D22 D22   miR_B run046
-UNIPD-046-D23     1  6015634            1 UNIPD-046-D23 D23   miR_B run046
-
-$genes
-                           ensembl_id  symbol              biotype
-ENSMUSG00000104478 ENSMUSG00000104478 Gm38212                  TEC
-ENSMUSG00000104385 ENSMUSG00000104385  Gm7449 processed_pseudogene
-ENSMUSG00000101231 ENSMUSG00000101231 Gm28283 processed_pseudogene
-ENSMUSG00000101097 ENSMUSG00000101097  Gm6679 processed_pseudogene
-ENSMUSG00000100764 ENSMUSG00000100764 Gm29155               lncRNA
-78343 more rows ...</code></pre>
+<pre><code>class: SummarizedExperiment 
+dim: 78348 9 
+metadata(0):
+assays(1): raw_count
+rownames(78348): ENSMUSG00000104478 ENSMUSG00000104385 ...
+  ENSMUSG00002074899 ENSMUSG00002076890
+rowData names(3): ensembl_id symbol biotype
+colnames(9): R09 R10 ... D22 D23
+colData names(2): condition run</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(se, <span class="st">"raw_count"</span>)[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                   R09 R10 R11 D18 D19 D20 D21 D22 D23
+ENSMUSG00000104478   0   0   0   0   0   0   0   0   0
+ENSMUSG00000104385   3   5   7   1   1   0   2   0   0
+ENSMUSG00000101231   0   0   0   0   0   0   0   0   0
+ENSMUSG00000101097   0   0   0   0   0   0   0   0   0
+ENSMUSG00000100764   4   0   7   1   0   2   3   0   0
+ENSMUSG00000100831   0   0   0   0   0   0   0   0   0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(se)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 9 rows and 2 columns
+    condition      run
+     &lt;factor&gt; &lt;factor&gt;
+R09   Ctrl      run024
+R10   Ctrl      run024
+R11   Ctrl      run024
+D18   miR_A    run046
+D19   miR_A    run046
+D20   miR_A    run046
+D21   miR_B   run046
+D22   miR_B   run046
+D23   miR_B   run046</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rowData</span>(se)[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 6 rows and 3 columns
+                           ensembl_id      symbol              biotype
+                          &lt;character&gt; &lt;character&gt;          &lt;character&gt;
+ENSMUSG00000104478 ENSMUSG00000104478     Gm38212                  TEC
+ENSMUSG00000104385 ENSMUSG00000104385      Gm7449 processed_pseudogene
+ENSMUSG00000101231 ENSMUSG00000101231     Gm28283 processed_pseudogene
+ENSMUSG00000101097 ENSMUSG00000101097      Gm6679 processed_pseudogene
+ENSMUSG00000100764 ENSMUSG00000100764     Gm29155               lncRNA
+ENSMUSG00000100831 ENSMUSG00000100831     Gm17847 processed_pseudogene</code></pre>
 </div>
 </div>
+<p>Ora l’oggetto <code>se</code> contiene tutto quello che serve per l’analisi. Salviamolo:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dge<span class="sc">$</span>samples, <span class="fu">aes</span>(<span class="at">x =</span> id, <span class="at">y =</span> lib.size <span class="sc">/</span> <span class="fl">1e6</span>, <span class="at">fill =</span> run)) <span class="sc">+</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Read assegnate (milioni)"</span>, <span class="at">fill =</span> <span class="st">"Corsa"</span>,</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Dimensione delle librerie"</span>) <span class="sc">+</span></span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="fig/quantseq-libsize-1.png" class="img-fluid figure-img" width="768"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="filtraggio-dei-geni-poco-espressi" class="level3">
-<h3 class="anchored" data-anchor-id="filtraggio-dei-geni-poco-espressi">Filtraggio dei geni poco espressi</h3>
-<p>Dei ~78.000 geni annotati, la maggior parte non è espressa nelle cellule C2C12. La funzione <code>filterByExpr()</code> mantiene i geni con un numero sufficiente di conte in un numero minimo di campioni, tenendo conto dei gruppi sperimentali e della dimensione delle librerie:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">rowSums</span>(dge<span class="sc">$</span>counts) <span class="sc">==</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-FALSE  TRUE 
-25031 53317 </code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>keep <span class="ot">&lt;-</span> <span class="fu">filterByExpr</span>(dge, <span class="at">group =</span> dge<span class="sc">$</span>samples<span class="sc">$</span>condition)</span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(keep)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>keep
-FALSE  TRUE 
-66628 11720 </code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>dge <span class="ot">&lt;-</span> dge[keep, , keep.lib.sizes <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(dge)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 11720     9</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">sort</span>(<span class="fu">table</span>(dge<span class="sc">$</span>genes<span class="sc">$</span>biotype), <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-                  protein_coding                           lncRNA 
-                           10797                              666 
-            processed_pseudogene                              TEC 
-                             186                               21 
-transcribed_processed_pseudogene 
-                              17 </code></pre>
-</div>
-</div>
-</section>
-<section id="normalizzazione-e-prima-esplorazione-dei-dati" class="level3">
-<h3 class="anchored" data-anchor-id="normalizzazione-e-prima-esplorazione-dei-dati">Normalizzazione e prima esplorazione dei dati</h3>
-<p>Calcoliamo i fattori di normalizzazione TMM e i valori di log-CPM, poi osserviamo la somiglianza tra i campioni con un grafico di <strong>multidimensional scaling</strong> (MDS):</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>dge <span class="ot">&lt;-</span> <span class="fu">calcNormFactors</span>(dge, <span class="at">method =</span> <span class="st">"TMM"</span>)</span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>dge<span class="sc">$</span>samples[, <span class="fu">c</span>(<span class="st">"condition"</span>, <span class="st">"run"</span>, <span class="st">"lib.size"</span>, <span class="st">"norm.factors"</span>)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>              condition    run lib.size norm.factors
-UNIPD-024-R09      Ctrl run024 13974953    0.9620774
-UNIPD-024-R10      Ctrl run024 14760579    0.9761632
-UNIPD-024-R11      Ctrl run024 16732384    0.9723675
-UNIPD-046-D18    miR_A run046  5938153    1.0229155
-UNIPD-046-D19    miR_A run046  6765225    1.0199774
-UNIPD-046-D20    miR_A run046  6217789    1.0159532
-UNIPD-046-D21   miR_B run046  5444628    1.0069994
-UNIPD-046-D22   miR_B run046  5897869    1.0125470
-UNIPD-046-D23   miR_B run046  6002093    1.0131849</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>logcpm <span class="ot">&lt;-</span> <span class="fu">cpm</span>(dge, <span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">Ctrl =</span> <span class="st">"grey40"</span>, <span class="at">miR_A =</span> <span class="st">"#D55E00"</span>, <span class="at">miR_B =</span> <span class="st">"#0072B2"</span>)</span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plotMDS</span>(logcpm, <span class="at">labels =</span> dge<span class="sc">$</span>samples<span class="sc">$</span>id,</span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> cols[<span class="fu">as.character</span>(dge<span class="sc">$</span>samples<span class="sc">$</span>condition)],</span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">"Grafico MDS (log-CPM)"</span>)</span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="at">legend =</span> <span class="fu">names</span>(cols), <span class="at">text.col =</span> cols, <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="fig/quantseq-mds-1.png" class="img-fluid figure-img" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>Biologia o batch?
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>La <strong>condizione</strong> (miRNA o controllo) e la <strong>corsa di sequenziamento</strong> si sovrappongono perfettamente: tutti i controlli vengono dalla corsa 024 e tutti i campioni con i miRNA dalla corsa 046. Se i controlli si separano dagli altri campioni lungo la prima dimensione, <strong>non possiamo</strong> dire se questo dipenda dai miRNA o dalla diversa corsa. Dal punto di vista statistico i due effetti sono <strong>confusi</strong> (<em>confounded</em>): nessun modello può separarli, perché la variabile <code>condition</code> (controllo o miRNA) e la variabile <code>run</code> contengono la stessa informazione.</p>
-<p>Il confronto tra <strong>miRNA A e miRNA B</strong> non ha questo problema, perché tutti e sei i campioni vengono dalla stessa corsa.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Domanda
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Osservate il grafico MDS. Quali campioni sono vicini tra loro? Le repliche di ciascun gruppo si somigliano? Lungo quale dimensione si separano i due miRNA? Come progettereste l’esperimento per evitare che condizione e corsa di sequenziamento siano confuse?</p>
-</div>
-</div>
-</section>
-<section id="salvataggio-dei-dati-per-la-prossima-esercitazione" class="level3">
-<h3 class="anchored" data-anchor-id="salvataggio-dei-dati-per-la-prossima-esercitazione">Salvataggio dei dati per la prossima esercitazione</h3>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(dge, <span class="st">"data/quantseq/dge_quantseq.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(se, <span class="st">"data/quantseq/se_quantseq.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 </section>
-<section id="esercitazione-commentare-un-report-fastqc" class="level2">
-<h2 class="anchored" data-anchor-id="esercitazione-commentare-un-report-fastqc">Esercitazione: commentare un report FastQC</h2>
+<section id="esercizio-1-commentare-un-report-fastqc" class="level2">
+<h2 class="anchored" data-anchor-id="esercizio-1-commentare-un-report-fastqc">Esercizio 1: commentare un report FastQC</h2>
 <p>Ognuno di voi riceverà <strong>un report FastQC</strong>. Apritelo, leggete tutti i moduli e scrivete un breve commento (5–10 righe) rispondendo alle seguenti domande:</p>
 <ol type="1">
 <li>Di quale campione si tratta? Quale condizione? È la Read 1 o la Read 2, grezza o dopo il trimming?</li>
@@ -1415,10 +1339,82 @@ UNIPD-046-D23   miR_B run046  6002093    1.0131849</code></pre>
 </div>
 <p>📊 <strong><a href="reports/quantseq/multiqc/multiqc_all.html">Report MultiQC: tutti i passaggi (FastQC, cutadapt, STAR)</a></strong></p>
 </section>
+<section id="esercizio-2-analisi-dei-dati" class="level2">
+<h2 class="anchored" data-anchor-id="esercizio-2-analisi-dei-dati">Esercizio 2: analisi dei dati</h2>
+<p>Partendo dall’oggetto <code>se</code>, analizzate i dati seguendo i passaggi delle esercitazioni precedenti (<a href="hand-on-2.qmd">Lab 2</a> e <a href="hand-on-3.qmd">Lab 3</a>).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>se <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/quantseq/se_quantseq.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="filtraggio" class="level3">
+<h3 class="anchored" data-anchor-id="filtraggio">Filtraggio</h3>
+<p>Eliminate i geni poco espressi, come nel Lab 2. Quanti geni restano? Quali biotipi sono più rappresentati tra i geni espressi?</p>
+</section>
+<section id="analisi-esplorativa" class="level3">
+<h3 class="anchored" data-anchor-id="analisi-esplorativa">Analisi esplorativa</h3>
+<p>Usate boxplot, MD plot, RLE plot e PCA sulle conte grezze trasformate con <code>log1p()</code>. Nei grafici colorate i campioni per <strong>condizione</strong> e, nella PCA, usate una forma diversa per ciascuna <strong>corsa di sequenziamento</strong> (<code>autoplot(..., colour = "condition", shape = "run")</code>).</p>
+<ul>
+<li>Le repliche di ciascun gruppo si somigliano? Ci sono campioni anomali?</li>
+<li>Quali campioni separa la prima componente principale? Si tratta di biologia o di profondità di sequenziamento?</li>
+</ul>
+</section>
+<section id="normalizzazione" class="level3">
+<h3 class="anchored" data-anchor-id="normalizzazione">Normalizzazione</h3>
+<p>Calcolate le normalizzazioni total count, RLE, TMM e upper quartile e confrontatele con boxplot, RLE plot e PCA, come nel Lab 2.</p>
+<ul>
+<li>Quale normalizzazione rende i campioni più confrontabili?</li>
+<li>Come cambia la PCA dopo la normalizzazione?</li>
+<li>Perché con QuantSeq non serve la normalizzazione per la lunghezza dei geni?</li>
+</ul>
+</section>
+<section id="analisi-differenziale-con-edger" class="level3">
+<h3 class="anchored" data-anchor-id="analisi-differenziale-con-edger">Analisi differenziale con edgeR</h3>
+<p>Seguite il Lab 3: create un oggetto <code>DGEList</code>, calcolate i fattori di normalizzazione TMM, stimate la dispersione e adattate il modello lineare generalizzato.</p>
+<p>Rispetto al Lab 3 ci sono <strong>tre gruppi</strong>. Con il disegno sperimentale <code>~ condition</code> il gruppo di riferimento è <code>Ctrl</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span> condition, <span class="at">data =</span> <span class="fu">colData</span>(se))</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(design)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<ul>
+<li><code>coef = 2</code> confronta <strong>miRNA A con il controllo</strong>;</li>
+<li><code>coef = 3</code> confronta <strong>miRNA B con il controllo</strong>;</li>
+<li>per confrontare <strong>miRNA A con miRNA B</strong> si usa un contrasto:</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>res_A_vs_B <span class="ot">&lt;-</span> <span class="fu">glmLRT</span>(fit, <span class="at">contrast =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Per ciascun confronto: quanti geni sono differenzialmente espressi (<span class="math inline">\(FDR &lt; 0.05\)</span>)? Visualizzate MD plot, volcano plot e distribuzione dei p-value.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Quali confronti sono affidabili?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Ricordate che i controlli sono stati sequenziati in una corsa diversa. Nei confronti <strong>miRNA contro controllo</strong> l’effetto del miRNA e quello della corsa sono <strong>confusi</strong> (<em>confounded</em>) e non possono essere separati. Il confronto <strong>miRNA A contro miRNA B</strong> non ha questo problema. Tenetene conto quando interpretate il numero di geni differenzialmente espressi e la distribuzione dei p-value.</p>
+</div>
+</div>
+</section>
+<section id="analisi-di-arricchimento" class="level3">
+<h3 class="anchored" data-anchor-id="analisi-di-arricchimento">Analisi di arricchimento</h3>
+<p>Ripetete l’analisi di arricchimento del Lab 3 (ORA e GSEA). Attenzione: questa volta i dati sono di <strong>topo</strong>:</p>
+<ul>
+<li>usate <code>org.Mm.eg.db</code> al posto di <code>org.Hs.eg.db</code>;</li>
+<li>per KEGG usate <code>organism = "mmu"</code>, per Reactome <code>organism = "mouse"</code>;</li>
+<li>per convertire gli identificativi Ensembl in Entrez usate <code>mapIds(org.Mm.eg.db, ..., column = "ENTREZID", keytype = "ENSEMBL")</code>, come nel Lab 3.</li>
+</ul>
+</section>
+<section id="domanda-finale" class="level3">
+<h3 class="anchored" data-anchor-id="domanda-finale">Domanda finale</h3>
+<p>I miRNA riducono l’espressione dei loro mRNA bersaglio. Cercate su <a href="https://www.targetscan.org/mmu_80/">TargetScan Mouse</a> i target predetti di miRNA A e di miRNA B: risultano down-regolati nei campioni corrispondenti? I pathway arricchiti sono coerenti con quello che sapete sulla funzione di questi due miRNA nelle cellule muscolari?</p>
+</section>
+</section>
 <section id="informazioni-sulla-sessione" class="level2">
 <h2 class="anchored" data-anchor-id="informazioni-sulla-sessione">Informazioni sulla sessione</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>R version 4.6.2 (2026-10-29)
 Platform: x86_64-pc-linux-gnu
@@ -1440,22 +1436,33 @@ time zone: Europe/Rome
 tzcode source: system (glibc)
 
 attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base     
+[1] stats4    stats     graphics  grDevices utils     datasets  methods  
+[8] base     
 
 other attached packages:
-[1] edgeR_4.10.7  limma_3.68.5  tidyr_1.3.2   ggplot2_4.0.3 knitr_1.52   
+ [1] SummarizedExperiment_1.42.0 Biobase_2.72.0             
+ [3] GenomicRanges_1.64.0        Seqinfo_1.2.0              
+ [5] IRanges_2.46.0              S4Vectors_0.50.3           
+ [7] BiocGenerics_0.58.1         generics_0.1.4             
+ [9] MatrixGenerics_1.24.0       matrixStats_1.5.0          
+[11] tidyr_1.3.2                 ggplot2_4.0.3              
+[13] knitr_1.52                 
 
 loaded via a namespace (and not attached):
- [1] gtable_0.3.6       jsonlite_2.0.0     dplyr_1.2.1        compiler_4.6.2    
- [5] tidyselect_1.2.1   dichromat_2.0-1    scales_1.4.0       yaml_2.3.12       
- [9] fastmap_1.2.0      statmod_1.5.2      lattice_0.23-1     R6_2.6.1          
-[13] labeling_0.4.3     generics_0.1.4     htmlwidgets_1.6.4  tibble_3.3.1      
-[17] pillar_1.11.1      RColorBrewer_1.1-3 rlang_1.3.0        xfun_0.62         
-[21] S7_0.2.2           otel_0.2.0         cli_3.6.6          withr_3.0.3       
-[25] magrittr_2.0.5     locfit_1.5-9.12    digest_0.6.39      grid_4.6.2        
-[29] rstudioapi_0.19.0  lifecycle_1.0.5    vctrs_0.7.3        evaluate_1.0.5    
-[33] glue_1.8.1         farver_2.1.2       rmarkdown_2.32     purrr_1.2.2       
-[37] tools_4.6.2        pkgconfig_2.0.3    htmltools_0.5.9   </code></pre>
+ [1] SparseArray_1.12.3  lattice_0.23-1      digest_0.6.39      
+ [4] magrittr_2.0.5      evaluate_1.0.5      grid_4.6.2         
+ [7] RColorBrewer_1.1-3  fastmap_1.2.0       jsonlite_2.0.0     
+[10] Matrix_1.7-6        purrr_1.2.2         scales_1.4.0       
+[13] abind_1.4-8         cli_3.6.6           rlang_1.3.0        
+[16] XVector_0.52.0      withr_3.0.3         DelayedArray_0.38.2
+[19] yaml_2.3.12         otel_0.2.0          S4Arrays_1.12.1    
+[22] tools_4.6.2         dplyr_1.2.1         vctrs_0.7.3        
+[25] R6_2.6.1            lifecycle_1.0.5     htmlwidgets_1.6.4  
+[28] pkgconfig_2.0.3     pillar_1.11.1       gtable_0.3.6       
+[31] glue_1.8.1          xfun_0.62           tibble_3.3.1       
+[34] tidyselect_1.2.1    rstudioapi_0.19.0   dichromat_2.0-1    
+[37] farver_2.1.2        htmltools_0.5.9     rmarkdown_2.32     
+[40] labeling_0.4.3      compiler_4.6.2      S7_0.2.2           </code></pre>
 </div>
 </div>
 </section>

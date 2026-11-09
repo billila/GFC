@@ -29,7 +29,7 @@ flowchart LR
   D --> E[Controllo qualità<br/>dopo il trimming]
   D --> F[Allineamento<br/>STAR]
   F --> G[Conte per gene<br/>STAR GeneCounts]
-  G --> H[Matrice delle conte<br/>edgeR DGEList]
+  G --> H[Matrice delle conte<br/>SummarizedExperiment]
   E --> I[MultiQC<br/>report finale]
   F --> I
 ```
@@ -109,28 +109,13 @@ Tutti i programmi sono stati installati in ambienti **conda**:
 | [cutadapt](https://cutadapt.readthedocs.io/) | 5.2 | rimozione di adattatori e poli(A) |
 | [STAR](https://github.com/alexdobin/STAR) | 2.7.10b | allineamento *splice-aware* e conta delle read per gene |
 
-I job sono stati lanciati sul cluster con lo scheduler **SLURM**. La cartella del progetto è organizzata così:
-
-```
-miRNA_C2C12/
-├── fastq/           # file FASTQ grezzi (R1 e R2) + checksum md5
-├── trimmed/         # R1 dopo il trimming + log di cutadapt
-├── star/            # una cartella per campione: BAM, log, ReadsPerGene.out.tab
-├── qc/
-│   ├── fastqc/          # FastQC sulle read grezze
-│   ├── fastqc_trimmed/  # FastQC sulle read dopo il trimming
-│   └── multiqc/         # report MultiQC
-├── counts/          # matrice delle conte
-├── scripts/         # script SLURM
-└── logs/            # log di SLURM
-```
 
 ## Passo 0: controllo dell'integrità dei file
 
 Insieme a ogni file FASTQ la facility di sequenziamento fornisce un file `.md5` che contiene il suo **checksum**: una "impronta digitale" del file, calcolata a partire dal suo contenuto. Il primo passo, ogni volta che si ricevono o si copiano dei dati, è ricalcolare il checksum e confrontarlo con quello fornito: se coincidono, il file è arrivato integro.
 
 ```bash
-cd /mnt/indraccolo/miRNA_C2C12/fastq
+cd /miRNA_C2C12/fastq
 cat *.md5 > all.md5
 md5sum -c all.md5      # ogni file deve risultare "OK"
 ```
@@ -148,16 +133,8 @@ Se anche un solo file risulta `FAILED`, va scaricato di nuovo prima di procedere
 [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) calcola per ogni file FASTQ una serie di metriche di qualità (moduli) e assegna a ciascuna un esito PASS, WARN o FAIL. [MultiQC](https://seqera.io/multiqc/) raccoglie i risultati di tutti i campioni in un unico report.
 
 ```bash
-#!/bin/bash
-#SBATCH -J fastqc
-#SBATCH -c 18
-#SBATCH --mem=32G
-#SBATCH -t 04:00:00
-conda activate /mnt/spca/conda/fastqc
-
-BASE=/mnt/indraccolo/miRNA_C2C12
-fastqc -t 18 -o $BASE/qc/fastqc $BASE/fastq/*.fastq.gz
-multiqc $BASE/qc/fastqc -o $BASE/qc/multiqc -n multiqc_fastqc
+fastqc -t 18 -o /miRNA_C2C12/qc/fastqc /miRNA_C2C12/fastq/*.fastq.gz
+multiqc /miRNA_C2C12/qc/fastqc -o /miRNA_C2C12/qc/multiqc -n multiqc_fastqc
 ```
 
 📊 **[Report MultiQC: read grezze (R1 e R2)](reports/quantseq/multiqc/multiqc_fastqc.html)**
@@ -207,13 +184,6 @@ cutadapt -j 8 \
 | `--nextseq-trim=20` | trimming di qualità dall'estremità 3', che tratta le code di G degli strumenti a due colori come bassa qualità |
 | `-m 20` | scarta le read più corte di 20 nt dopo il trimming |
 
-Lo script è stato lanciato come **job array** di SLURM: un unico script eseguito 9 volte, una per campione, con `$SLURM_ARRAY_TASK_ID` che va da 0 a 8:
-
-```bash
-#SBATCH --array=0-8
-SAMPLES=(UNIPD-046-D18 UNIPD-046-D19 UNIPD-046-D20 UNIPD-046-D21 UNIPD-046-D22 UNIPD-046-D23 UNIPD-024-R09 UNIPD-024-R10 UNIPD-024-R11)
-S=${SAMPLES[$SLURM_ARRAY_TASK_ID]}
-```
 
 Ecco le prime read R1 di D18 prima e dopo il trimming:
 
@@ -251,7 +221,7 @@ Confrontate i moduli *Adapter content*, *Sequence length distribution* e *Per ba
 
 Le read vengono allineate al genoma di riferimento del topo (**GRCm39**) con [STAR](https://github.com/alexdobin/STAR), un allineatore **splice-aware**: anche se le read QuantSeq sono vicine all'estremità 3', alcune di esse attraversano una giunzione esone–esone.
 
-STAR ha bisogno di un **indice** del genoma, costruito una volta sola a partire dal FASTA del genoma e dall'annotazione dei geni (GTF). Abbiamo usato un indice già disponibile sul cluster, costruito con l'annotazione **Ensembl release 116**:
+STAR ha bisogno di un **indice** del genoma, costruito una volta sola a partire dal FASTA del genoma e dall'annotazione dei geni (GTF). Abbiamo usato un indice costruito con l'annotazione **Ensembl release 116**:
 
 ```bash
 STAR --runMode genomeGenerate --runThreadN 16 \
@@ -368,15 +338,19 @@ kable(cnt_summ,
 
 Più del 90% delle read mappate in modo univoco viene assegnato a un gene.
 
-::: {.callout-note}
-## Perché non serve normalizzare per la lunghezza dei geni?
+## Passo 5: dalla tabella di STAR alla matrice delle conte
 
-In un esperimento RNA-seq classico un trascritto lungo produce più frammenti di uno corto, quindi per confrontare geni diversi le conte vanno corrette per la lunghezza (per esempio RPKM, TPM). In QuantSeq ogni trascritto produce **un solo frammento**, qualunque sia la sua lunghezza: le conte sono direttamente proporzionali al numero di molecole.
-:::
+Per ogni campione abbiamo un file `ReadsPerGene.out.tab` (compresso con gzip).
 
-## Passo 5: costruire la matrice delle conte in R
+### Pacchetti R
 
-Adesso tocca a voi. Per ogni campione abbiamo un file `ReadsPerGene.out.tab` (compresso con gzip) nella cartella `data/quantseq/star/`.
+Per costruire la matrice delle conte ci serve solo il pacchetto **SummarizedExperiment**, già usato nelle esercitazioni precedenti:
+
+```{r, message=FALSE}
+library(SummarizedExperiment)
+```
+
+### Lettura dei file
 
 ```{r}
 files <- list.files("data/quantseq/star", pattern = "ReadsPerGene.out.tab.gz$",
@@ -401,18 +375,25 @@ read_counts <- function(f) {
   setNames(x$V3, x$V1)
 }
 
-counts <- sapply(files, read_counts)
-dim(counts)
-head(counts)
+raw_count <- sapply(files, read_counts)
+dim(raw_count)
+head(raw_count)
 ```
 
-Prima di andare avanti controlliamo che tutti i file contengano gli stessi geni nello stesso ordine, e che le somme per colonna corrispondano ai valori `N_assigned` della tabella precedente:
+Prima di andare avanti controlliamo che tutti i file contengano gli stessi geni nello stesso ordine, e che le somme per colonna corrispondano ai valori `N_assigned` della tabella del passo 4:
 
 ```{r}
 gene_ids <- lapply(files, function(f) read.delim(f, header = FALSE, skip = 4)$V1)
 all(sapply(gene_ids, identical, gene_ids[[1]]))
 
-colSums(counts)
+colSums(raw_count)
+```
+
+Per rendere più leggibili i grafici accorciamo i nomi dei campioni (`UNIPD-046-D18` diventa `D18`):
+
+```{r}
+colnames(raw_count) <- sub("^UNIPD-0(24|46)-", "", colnames(raw_count))
+colnames(raw_count)
 ```
 
 ### Informazioni sui campioni
@@ -420,17 +401,15 @@ colSums(counts)
 Creiamo un `data.frame` con le informazioni sui campioni. Assegniamo la condizione **a partire dal nome del campione**, così il risultato non dipende dall'ordine dei file:
 
 ```{r}
-id <- sub("^UNIPD-0(24|46)-", "", colnames(counts))
 condition_map <- c(D18 = "miR_A",  D19 = "miR_A",  D20 = "miR_A",
                    D21 = "miR_B", D22 = "miR_B", D23 = "miR_B",
                    R09 = "Ctrl",    R10 = "Ctrl",    R11 = "Ctrl")
 
 samples <- data.frame(
-  sample    = colnames(counts),
-  id        = id,
-  condition = factor(condition_map[id], levels = c("Ctrl", "miR_A", "miR_B")),
-  run       = factor(ifelse(grepl("^UNIPD-024", colnames(counts)), "run024", "run046")),
-  row.names = colnames(counts)
+  condition = factor(condition_map[colnames(raw_count)],
+                     levels = c("Ctrl", "miR_A", "miR_B")),
+  run       = factor(ifelse(grepl("^R", colnames(raw_count)), "run024", "run046")),
+  row.names = colnames(raw_count)
 )
 samples
 ```
@@ -443,87 +422,35 @@ Le righe della matrice sono **identificativi Ensembl** dei geni (`ENSMUSG...`). 
 genes <- read.delim("data/quantseq/geneInfo.tab.gz", header = FALSE, skip = 1,
                     col.names = c("ensembl_id", "symbol", "biotype"))
 rownames(genes) <- genes$ensembl_id
-genes <- genes[rownames(counts), ]
+genes <- genes[rownames(raw_count), ]
 head(genes)
 head(sort(table(genes$biotype), decreasing = TRUE), 8)
 ```
 
-### L'oggetto DGEList
+### L'oggetto SummarizedExperiment
 
-Come nelle esercitazioni precedenti usiamo **edgeR**. L'oggetto `DGEList` raccoglie in un unico oggetto la matrice delle conte, le informazioni sui campioni e l'annotazione dei geni:
-
-```{r}
-library(edgeR)
-
-dge <- DGEList(counts = counts, samples = samples, genes = genes)
-dge
-```
-
-```{r libsize}
-ggplot(dge$samples, aes(x = id, y = lib.size / 1e6, fill = run)) +
-  geom_col() +
-  labs(x = NULL, y = "Read assegnate (milioni)", fill = "Corsa",
-       title = "Dimensione delle librerie") +
-  theme_classic()
-```
-
-### Filtraggio dei geni poco espressi
-
-Dei ~78.000 geni annotati, la maggior parte non è espressa nelle cellule C2C12. La funzione `filterByExpr()` mantiene i geni con un numero sufficiente di conte in un numero minimo di campioni, tenendo conto dei gruppi sperimentali e della dimensione delle librerie:
+Come nella seconda esercitazione, raccogliamo matrice delle conte, informazioni sui campioni e annotazione dei geni in un oggetto **SummarizedExperiment**:
 
 ```{r}
-table(rowSums(dge$counts) == 0)
+se <- SummarizedExperiment(assays = list(raw_count = raw_count),
+                           colData = samples,
+                           rowData = genes)
+se
 
-keep <- filterByExpr(dge, group = dge$samples$condition)
-table(keep)
-
-dge <- dge[keep, , keep.lib.sizes = FALSE]
-dim(dge)
-head(sort(table(dge$genes$biotype), decreasing = TRUE), 5)
+assay(se, "raw_count")[1:6, ]
+colData(se)
+rowData(se)[1:6, ]
 ```
 
-### Normalizzazione e prima esplorazione dei dati
-
-Calcoliamo i fattori di normalizzazione TMM e i valori di log-CPM, poi osserviamo la somiglianza tra i campioni con un grafico di **multidimensional scaling** (MDS):
+Ora l'oggetto `se` contiene tutto quello che serve per l'analisi. Salviamolo:
 
 ```{r}
-dge <- calcNormFactors(dge, method = "TMM")
-dge$samples[, c("condition", "run", "lib.size", "norm.factors")]
-
-logcpm <- cpm(dge, log = TRUE)
+saveRDS(se, "data/quantseq/se_quantseq.rds")
 ```
 
-```{r mds, fig.width = 6, fig.height = 5}
-cols <- c(Ctrl = "grey40", miR_A = "#D55E00", miR_B = "#0072B2")
-plotMDS(logcpm, labels = dge$samples$id,
-        col = cols[as.character(dge$samples$condition)],
-        main = "Grafico MDS (log-CPM)")
-legend("topright", legend = names(cols), text.col = cols, bty = "n")
-```
+## Esercizio 1: commentare un report FastQC
 
-::: {.callout-warning}
-## Biologia o batch?
-
-La **condizione** (miRNA o controllo) e la **corsa di sequenziamento** si sovrappongono perfettamente: tutti i controlli vengono dalla corsa 024 e tutti i campioni con i miRNA dalla corsa 046. Se i controlli si separano dagli altri campioni lungo la prima dimensione, **non possiamo** dire se questo dipenda dai miRNA o dalla diversa corsa. Dal punto di vista statistico i due effetti sono **confusi** (*confounded*): nessun modello può separarli, perché la variabile `condition` (controllo o miRNA) e la variabile `run` contengono la stessa informazione.
-
-Il confronto tra **miRNA A e miRNA B** non ha questo problema, perché tutti e sei i campioni vengono dalla stessa corsa.
-:::
-
-::: {.callout-tip}
-## Domanda
-
-Osservate il grafico MDS. Quali campioni sono vicini tra loro? Le repliche di ciascun gruppo si somigliano? Lungo quale dimensione si separano i due miRNA? Come progettereste l'esperimento per evitare che condizione e corsa di sequenziamento siano confuse?
-:::
-
-### Salvataggio dei dati per la prossima esercitazione
-
-```{r}
-saveRDS(dge, "data/quantseq/dge_quantseq.rds")
-```
-
-## Esercitazione: commentare un report FastQC
-
-Ognuno di voi riceverà **un report FastQC**. Apritelo, leggete tutti i moduli e scrivete un breve commento (5–10 righe) rispondendo alle seguenti domande:
+Scegliete **un report FastQC**. Apritelo, leggete tutti i moduli e scrivete un breve commento (5–10 righe) rispondendo alle seguenti domande:
 
 1. Di quale campione si tratta? Quale condizione? È la Read 1 o la Read 2, grezza o dopo il trimming?
 2. Quante read contiene? Quanto sono lunghe?
@@ -554,6 +481,72 @@ kable(reports)
 ```
 
 📊 **[Report MultiQC: tutti i passaggi (FastQC, cutadapt, STAR)](reports/quantseq/multiqc/multiqc_all.html)**
+
+## Esercizio 2: analisi dei dati
+
+Partendo dall'oggetto `se`, analizzate i dati seguendo i passaggi delle esercitazioni precedenti ([Lab 2](hand-on-2.qmd) e [Lab 3](hand-on-3.qmd)).
+
+```{r, eval = FALSE}
+se <- readRDS("data/quantseq/se_quantseq.rds")
+```
+
+### Filtraggio
+
+Eliminate i geni poco espressi, come nel Lab 2. Quanti geni restano? Quali biotipi sono più rappresentati tra i geni espressi?
+
+### Analisi esplorativa
+
+Usate boxplot, MD plot, RLE plot e PCA sulle conte grezze trasformate con `log1p()`. Nei grafici colorate i campioni per **condizione** e, nella PCA, usate una forma diversa per ciascuna **corsa di sequenziamento** (`autoplot(..., colour = "condition", shape = "run")`).
+
+- Le repliche di ciascun gruppo si somigliano? Ci sono campioni anomali?
+- Quali campioni separa la prima componente principale? Si tratta di biologia o di profondità di sequenziamento?
+
+### Normalizzazione
+
+Calcolate le normalizzazioni total count, RLE, TMM e upper quartile e confrontatele con boxplot, RLE plot e PCA, come nel Lab 2.
+
+- Quale normalizzazione rende i campioni più confrontabili?
+- Come cambia la PCA dopo la normalizzazione?
+- Perché con QuantSeq non serve la normalizzazione per la lunghezza dei geni?
+
+### Analisi differenziale con edgeR
+
+Seguite il Lab 3: create un oggetto `DGEList`, calcolate i fattori di normalizzazione TMM, stimate la dispersione e adattate il modello lineare generalizzato.
+
+Rispetto al Lab 3 ci sono **tre gruppi**. Con il disegno sperimentale `~ condition` il gruppo di riferimento è `Ctrl`:
+
+```{r, eval = FALSE}
+design <- model.matrix(~ condition, data = colData(se))
+colnames(design)
+```
+
+- `coef = 2` confronta **miRNA A con il controllo**;
+- `coef = 3` confronta **miRNA B con il controllo**;
+- per confrontare **miRNA A con miRNA B** si usa un contrasto:
+
+```{r, eval = FALSE}
+res_A_vs_B <- glmLRT(fit, contrast = c(0, 1, -1))
+```
+
+Per ciascun confronto: quanti geni sono differenzialmente espressi ($FDR < 0.05$)? Visualizzate MD plot, volcano plot e distribuzione dei p-value.
+
+::: {.callout-warning}
+## Quali confronti sono affidabili?
+
+Ricordate che i controlli sono stati sequenziati in una corsa diversa. Nei confronti **miRNA contro controllo** l'effetto del miRNA e quello della corsa sono **confusi** (*confounded*) e non possono essere separati. Il confronto **miRNA A contro miRNA B** non ha questo problema. Tenetene conto quando interpretate il numero di geni differenzialmente espressi e la distribuzione dei p-value.
+:::
+
+### Analisi di arricchimento
+
+Ripetete l'analisi di arricchimento del Lab 3 (ORA e GSEA). Attenzione: questa volta i dati sono di **topo**:
+
+- usate `org.Mm.eg.db` al posto di `org.Hs.eg.db`;
+- per KEGG usate `organism = "mmu"`, per Reactome `organism = "mouse"`;
+- per convertire gli identificativi Ensembl in Entrez usate `mapIds(org.Mm.eg.db, ..., column = "ENTREZID", keytype = "ENSEMBL")`, come nel Lab 3.
+
+### Domanda finale
+
+I miRNA riducono l'espressione dei loro mRNA bersaglio. Cercate su [TargetScan Mouse](https://www.targetscan.org/mmu_80/) i target predetti di miRNA A e di miRNA B: risultano down-regolati nei campioni corrispondenti? I pathway arricchiti sono coerenti con quello che sapete sulla funzione di questi due miRNA nelle cellule muscolari?
 
 ## Informazioni sulla sessione
 
