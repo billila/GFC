@@ -40,8 +40,8 @@ I passaggi da riga di comando (dal controllo dei file alle conte per gene) sono 
 
 | Campione | Condizione | Corsa di sequenziamento |
 |---|---|---|
-| D18, D19, D20 | sovra-espressione di **miRNA A** | corsa 046 |
-| D21, D22, D23 | sovra-espressione di **miRNA B** | corsa 046 |
+| D18, D19, D20 | sovra-espressione di **miR-A** | corsa 046 |
+| D21, D22, D23 | sovra-espressione di **miR-B** | corsa 046 |
 | R09, R10, R11 | cellule di **controllo** | corsa 024 |
 
 ::: {.callout-warning}
@@ -346,13 +346,13 @@ Per ogni campione abbiamo un file `ReadsPerGene.out.tab` (compresso con gzip).
 
 Per costruire la matrice delle conte ci serve solo il pacchetto **SummarizedExperiment**, già usato nelle esercitazioni precedenti:
 
-```{r, message=FALSE}
+```{r, eval = FALSE}
 library(SummarizedExperiment)
 ```
 
 ### Lettura dei file
 
-```{r}
+```{r, eval = FALSE}
 files <- list.files("data/quantseq/star", pattern = "ReadsPerGene.out.tab.gz$",
                     full.names = TRUE)
 names(files) <- sub(".ReadsPerGene.out.tab.gz", "", basename(files))
@@ -361,7 +361,7 @@ basename(files)
 
 Leggiamo un file per capirne la struttura:
 
-```{r}
+```{r, eval = FALSE}
 x <- read.delim(files[1], header = FALSE)
 head(x)
 dim(x)
@@ -369,7 +369,7 @@ dim(x)
 
 Le prime 4 righe sono il riepilogo visto sopra: le saltiamo e teniamo gli identificativi dei geni (colonna 1) e le conte forward stranded (colonna 3). Ripetiamo l'operazione per ogni file con `sapply()`, che restituisce una matrice con una colonna per campione:
 
-```{r}
+```{r, eval = FALSE}
 read_counts <- function(f) {
   x <- read.delim(f, header = FALSE, skip = 4)
   setNames(x$V3, x$V1)
@@ -382,7 +382,7 @@ head(raw_count)
 
 Prima di andare avanti controlliamo che tutti i file contengano gli stessi geni nello stesso ordine, e che le somme per colonna corrispondano ai valori `N_assigned` della tabella del passo 4:
 
-```{r}
+```{r, eval = FALSE}
 gene_ids <- lapply(files, function(f) read.delim(f, header = FALSE, skip = 4)$V1)
 all(sapply(gene_ids, identical, gene_ids[[1]]))
 
@@ -391,7 +391,7 @@ colSums(raw_count)
 
 Per rendere più leggibili i grafici accorciamo i nomi dei campioni (`UNIPD-046-D18` diventa `D18`):
 
-```{r}
+```{r, eval = FALSE}
 colnames(raw_count) <- sub("^UNIPD-0(24|46)-", "", colnames(raw_count))
 colnames(raw_count)
 ```
@@ -400,14 +400,14 @@ colnames(raw_count)
 
 Creiamo un `data.frame` con le informazioni sui campioni. Assegniamo la condizione **a partire dal nome del campione**, così il risultato non dipende dall'ordine dei file:
 
-```{r}
-condition_map <- c(D18 = "miR_A",  D19 = "miR_A",  D20 = "miR_A",
-                   D21 = "miR_B", D22 = "miR_B", D23 = "miR_B",
+```{r, eval = FALSE}
+condition_map <- c(D18 = "miRA",  D19 = "miRA",  D20 = "miRA",
+                   D21 = "miRB", D22 = "miRB", D23 = "miRB",
                    R09 = "Ctrl",    R10 = "Ctrl",    R11 = "Ctrl")
 
 samples <- data.frame(
   condition = factor(condition_map[colnames(raw_count)],
-                     levels = c("Ctrl", "miR_A", "miR_B")),
+                     levels = c("Ctrl", "miRA", "miRB")),
   run       = factor(ifelse(grepl("^R", colnames(raw_count)), "run024", "run046")),
   row.names = colnames(raw_count)
 )
@@ -418,7 +418,7 @@ samples
 
 Le righe della matrice sono **identificativi Ensembl** dei geni (`ENSMUSG...`). L'indice di STAR contiene il file `geneInfo.tab` con il simbolo e il biotipo di ciascun gene:
 
-```{r}
+```{r, eval = FALSE}
 genes <- read.delim("data/quantseq/geneInfo.tab.gz", header = FALSE, skip = 1,
                     col.names = c("ensembl_id", "symbol", "biotype"))
 rownames(genes) <- genes$ensembl_id
@@ -431,7 +431,7 @@ head(sort(table(genes$biotype), decreasing = TRUE), 8)
 
 Come nella seconda esercitazione, raccogliamo matrice delle conte, informazioni sui campioni e annotazione dei geni in un oggetto **SummarizedExperiment**:
 
-```{r}
+```{r, eval = FALSE}
 se <- SummarizedExperiment(assays = list(raw_count = raw_count),
                            colData = samples,
                            rowData = genes)
@@ -444,7 +444,7 @@ rowData(se)[1:6, ]
 
 Ora l'oggetto `se` contiene tutto quello che serve per l'analisi. Salviamolo:
 
-```{r}
+```{r, eval = FALSE}
 saveRDS(se, "data/quantseq/se_quantseq.rds")
 ```
 
@@ -471,7 +471,7 @@ link <- function(path, label) sprintf("[%s](%s)", label, path)
 
 reports <- data.frame(
   Campione     = ids,
-  Condizione   = condition_map[sub("^UNIPD-0(24|46)-", "", ids)],
+  Condizione   = rep(c("miR_A", "miR_B", "Ctrl"), each = 3),
   `R1 grezza`  = link(sprintf("reports/quantseq/fastqc_raw/%s_R1_fastqc.html", ids), "R1"),
   `R2 grezza`  = link(sprintf("reports/quantseq/fastqc_raw/%s_R2_fastqc.html", ids), "R2"),
   `R1 trimmed` = link(sprintf("reports/quantseq/fastqc_trimmed/%s_R1.trim_fastqc.html", ids), "R1 trimmed"),
@@ -520,9 +520,9 @@ design <- model.matrix(~ condition, data = colData(se))
 colnames(design)
 ```
 
-- `coef = 2` confronta **miRNA A con il controllo**;
-- `coef = 3` confronta **miRNA B con il controllo**;
-- per confrontare **miRNA A con miRNA B** si usa un contrasto:
+- `coef = 2` confronta **miR-A con il controllo**;
+- `coef = 3` confronta **miR-B con il controllo**;
+- per confrontare **miR-A con miR-B** si usa un contrasto:
 
 ```{r, eval = FALSE}
 res_A_vs_B <- glmLRT(fit, contrast = c(0, 1, -1))
@@ -533,7 +533,7 @@ Per ciascun confronto: quanti geni sono differenzialmente espressi ($FDR < 0.05$
 ::: {.callout-warning}
 ## Quali confronti sono affidabili?
 
-Ricordate che i controlli sono stati sequenziati in una corsa diversa. Nei confronti **miRNA contro controllo** l'effetto del miRNA e quello della corsa sono **confusi** (*confounded*) e non possono essere separati. Il confronto **miRNA A contro miRNA B** non ha questo problema. Tenetene conto quando interpretate il numero di geni differenzialmente espressi e la distribuzione dei p-value.
+Ricordate che i controlli sono stati sequenziati in una corsa diversa. Nei confronti **miRNA contro controllo** l'effetto del miRNA e quello della corsa sono **confusi** (*confounded*) e non possono essere separati. Il confronto **miR-A contro miR-B** non ha questo problema. Tenetene conto quando interpretate il numero di geni differenzialmente espressi e la distribuzione dei p-value.
 :::
 
 ### Analisi di arricchimento
@@ -546,7 +546,7 @@ Ripetete l'analisi di arricchimento del Lab 3 (ORA e GSEA). Attenzione: questa v
 
 ### Domanda finale
 
-I miRNA riducono l'espressione dei loro mRNA bersaglio. Cercate su [TargetScan Mouse](https://www.targetscan.org/mmu_80/) i target predetti di miRNA A e di miRNA B: risultano down-regolati nei campioni corrispondenti? I pathway arricchiti sono coerenti con quello che sapete sulla funzione di questi due miRNA nelle cellule muscolari?
+I miRNA riducono l'espressione dei loro mRNA bersaglio. I geni down-regolati in ciascun gruppo e i pathway arricchiti sono compatibili con questo meccanismo? I due miRNA sembrano regolare processi biologici diversi?
 
 ## Informazioni sulla sessione
 

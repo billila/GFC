@@ -9,3 +9,5 @@
 *.RData
 esercitazioni/data/luad.rds
 _book/esercitazioni/data/luad.rds
+esercitazioni/data/quantseq/star/
+esercitazioni/data/quantseq/geneInfo.tab.gz
